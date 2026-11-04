@@ -1,44 +1,45 @@
 export type Papel = 'admin' | 'tesoureiro' | 'direcao' | 'leitura'
 
-export interface Configuracao {
-  id: number
+interface Base {
+  id: string
+  created?: string
+}
+
+export interface Configuracao extends Base {
   nome_associacao: string
   ano_letivo: string
   valor_quota: number
   saldo_inicial: number
 }
 
-export interface Socio {
-  id: number
-  numero: number | null
+export interface Socio extends Base {
+  numero: number
   nome: string
-  email: string | null
-  telefone: string | null
-  nif: string | null
+  email: string
+  telefone: string
+  nif: string
   data_adesao: string
   ativo: boolean
   consentimento_rgpd: boolean
-  notas: string | null
+  notas: string
 }
 
 export const ANOS_ESCOLARES = ['Pré 3 anos', 'Pré 4 anos', 'Pré 5 anos', '1.º', '2.º', '3.º', '4.º', 'Saiu'] as const
 
-export interface Educando {
-  id: number
-  socio_id: number
+export interface Educando extends Base {
+  socio: string
   nome: string
   ano_escolar: string
-  turma: string | null
+  turma: string
 }
 
-export interface Quota {
-  id: number
-  socio_id: number
+export interface Quota extends Base {
+  socio: string
   ano_letivo: string
   valor: number
   data_pagamento: string
   metodo: string
-  movimento_id: number | null
+  movimento: string
 }
 
 export const METODOS = ['Numerário', 'MB WAY', 'Transferência', 'Multibanco', 'Cheque', 'Outro'] as const
@@ -46,45 +47,43 @@ export const METODOS = ['Numerário', 'MB WAY', 'Transferência', 'Multibanco', 
 export const CATEGORIAS_RECEITA = ['Quotas', 'Eventos', 'Donativos', 'Angariação de fundos', 'Subsídios', 'Outras receitas']
 export const CATEGORIAS_DESPESA = ['Eventos', 'Material', 'Transportes', 'Alimentação', 'Ofertas', 'Despesas bancárias', 'Outras despesas']
 
-export interface Movimento {
-  id: number
+export interface Movimento extends Base {
   data: string
   tipo: 'receita' | 'despesa'
   categoria: string
   descricao: string
   valor: number
   metodo: string
-  documento: string | null
+  documento: string
+  comprovativo: string
   ano_letivo: string
-  evento_id: number | null
-  socio_id: number | null
+  evento: string
+  socio: string
 }
 
 export const TIPOS_EVENTO = ['Festa', 'Passeio', 'Atividade', 'Angariação', 'Outro'] as const
 export const ESTADOS_EVENTO = ['Planeado', 'Aberto', 'Fechado', 'Concluído', 'Cancelado'] as const
 
-export interface Evento {
-  id: number
+export interface Evento extends Base {
   nome: string
   tipo: string
-  data: string | null
-  local: string | null
+  data: string
+  local: string
   preco: number
-  preco_nao_socio: number | null
-  vagas: number | null
-  descricao: string | null
+  preco_nao_socio: number
+  vagas: number
+  descricao: string
   ano_letivo: string
   estado: string
 }
 
-export interface Inscricao {
-  id: number
-  evento_id: number
-  educando_id: number | null
+export interface Inscricao extends Base {
+  evento: string
+  educando: string
   nome: string
-  contacto: string | null
+  contacto: string
   valor: number
   pago: boolean
-  movimento_id: number | null
-  notas: string | null
+  movimento: string
+  notas: string
 }

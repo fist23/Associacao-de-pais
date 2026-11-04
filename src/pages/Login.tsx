@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { supabase } from '../lib/supabase'
+import { pb } from '../lib/pb'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -11,15 +11,13 @@ export default function Login() {
     e.preventDefault()
     setAEntrar(true)
     setMsg('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setMsg('Email ou palavra-passe incorretos.')
+    try {
+      await pb.collection('users').authWithPassword(email, password)
+    } catch (err) {
+      const status = (err as { status?: number }).status
+      setMsg(status === 0 ? 'Sem ligação ao servidor.' : 'Email ou palavra-passe incorretos.')
+    }
     setAEntrar(false)
-  }
-
-  async function recuperar() {
-    if (!email) return setMsg('Escreva primeiro o seu email.')
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] })
-    setMsg(error ? error.message : 'Enviámos um email para redefinir a palavra-passe.')
   }
 
   return (
@@ -31,7 +29,7 @@ export default function Login() {
         <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" /></label>
         <label>Palavra-passe<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></label>
         <button type="submit" disabled={aEntrar}>{aEntrar ? 'A entrar…' : 'Entrar'}</button>
-        <button type="button" className="ligacao" onClick={recuperar}>Esqueci-me da palavra-passe</button>
+        <p className="subtil pequeno">Esqueceu-se da palavra-passe? Peça ao administrador da associação para a redefinir.</p>
         {msg && <p className="aviso">{msg}</p>}
       </form>
     </div>
