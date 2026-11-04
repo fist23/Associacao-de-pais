@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom'
 import { pb } from '../lib/pb'
 import { useSessao } from '../lib/contexto'
 import type { Evento, Movimento } from '../lib/types'
-import { dataPT, euro, hoje } from '../lib/util'
+import { euro, hoje } from '../lib/util'
 import { somar } from '../lib/dados'
+import { DataBloco, PaginaTopo, corTipo } from '../components/Visual'
 
 interface Resumo {
   saldo: number
@@ -17,7 +18,7 @@ interface Resumo {
 }
 
 export default function Painel() {
-  const { config } = useSessao()
+  const { config, nome } = useSessao()
   const [r, setR] = useState<Resumo | null>(null)
 
   useEffect(() => {
@@ -51,48 +52,63 @@ export default function Painel() {
     })().catch(() => {})
   }, [config])
 
-  if (!r) return <p>A carregar…</p>
+  if (!r) return <p className="ajuda">A carregar…</p>
   const max = Math.max(1, ...r.porCategoria.map((c) => Math.max(c.receita, c.despesa)))
+  const emFalta = r.socios - r.quotasPagas
+  const primeiroNome = nome.split(' ')[0]
 
   return (
     <>
-      <h1>Painel · {config.ano_letivo}</h1>
-      <div className="grelha-kpi">
-        <div className="kpi destaque"><span>Saldo atual</span><b>{euro(r.saldo)}</b></div>
-        <div className="kpi"><span>Receitas do ano</span><b className="pos">{euro(r.receitasAno)}</b></div>
-        <div className="kpi"><span>Despesas do ano</span><b className="neg">{euro(r.despesasAno)}</b></div>
+      <PaginaTopo sobre={`Ano letivo ${config.ano_letivo}`} titulo={`Olá, ${primeiroNome}`} />
+
+      <div className="contas">
+        <div className="kpi saldo"><span>Saldo atual</span><b>{euro(r.saldo)}</b><small>caixa + banco</small></div>
+        <div className="kpi"><span>Receitas</span><b className="receita">{euro(r.receitasAno)}</b><small>neste ano letivo</small></div>
+        <div className="kpi"><span>Despesas</span><b className="despesa">{euro(r.despesasAno)}</b><small>neste ano letivo</small></div>
         <div className="kpi">
-          <span>Quotas pagas</span>
-          <b>{r.quotasPagas} / {r.socios}</b>
-          <small>{r.socios - r.quotasPagas > 0 ? `${r.socios - r.quotasPagas} em falta` : 'Todas pagas'}</small>
+          <span>Quotas</span>
+          <b>{r.quotasPagas}<small style={{ fontSize: '1rem' }}> / {r.socios}</small></b>
+          <small>{r.socios === 0 ? 'sem sócios ativos' : emFalta > 0 ? <Link to="/socios?f=falta">{emFalta} por pagar →</Link> : 'todas pagas'}</small>
         </div>
       </div>
 
       <div className="duas-colunas">
-        <section className="cartao">
+        <section className="painel">
           <h2>Próximos eventos</h2>
-          {r.eventos.length === 0 && <p className="subtil">Sem eventos agendados.</p>}
-          <ul className="lista-simples">
-            {r.eventos.map((e) => (
-              <li key={e.id}>
-                <Link to={`/eventos/${e.id}`}>{e.nome}</Link>
-                <span className="subtil">{dataPT(e.data)} · {e.tipo}</span>
-              </li>
-            ))}
-          </ul>
+          {r.eventos.length === 0 ? (
+            <p className="ajuda">Sem eventos agendados. <Link to="/eventos">Criar um evento</Link></p>
+          ) : (
+            <ul className="lista-eventos">
+              {r.eventos.map((e) => (
+                <li key={e.id} className={corTipo(e.tipo)}>
+                  <Link to={`/eventos/${e.id}`}>
+                    <DataBloco data={e.data} />
+                    <span>
+                      <b>{e.nome}</b>
+                      <span className="secundaria">{e.tipo}{e.local ? ` · ${e.local}` : ''}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
-        <section className="cartao">
-          <h2>Por categoria ({config.ano_letivo})</h2>
-          {r.porCategoria.length === 0 && <p className="subtil">Ainda não há movimentos este ano.</p>}
+        <section className="painel">
+          <h2>Para onde vai o dinheiro</h2>
+          {r.porCategoria.length === 0 && <p className="ajuda">Ainda não há movimentos este ano letivo.</p>}
           {r.porCategoria.map((c) => (
-            <div key={c.categoria} className="barra-linha">
+            <div key={c.categoria} className="categoria">
               <span>{c.categoria}</span>
-              <div className="barras">
-                {c.receita > 0 && <div className="barra pos" style={{ width: `${(c.receita / max) * 100}%` }} title={euro(c.receita)} />}
-                {c.despesa > 0 && <div className="barra neg" style={{ width: `${(c.despesa / max) * 100}%` }} title={euro(c.despesa)} />}
+              <div className="barras" aria-hidden>
+                {c.receita > 0 && <div className="barra receita" style={{ width: `${(c.receita / max) * 100}%` }} />}
+                {c.despesa > 0 && <div className="barra despesa" style={{ width: `${(c.despesa / max) * 100}%` }} />}
               </div>
-              <span className="valor">{c.receita > 0 && <span className="pos">+{euro(c.receita)}</span>} {c.despesa > 0 && <span className="neg">−{euro(c.despesa)}</span>}</span>
+              <span className="valor">
+                {c.receita > 0 && <span className="receita">+{euro(c.receita)}</span>}
+                {c.receita > 0 && c.despesa > 0 && <br />}
+                {c.despesa > 0 && <span className="despesa">−{euro(c.despesa)}</span>}
+              </span>
             </div>
           ))}
         </section>

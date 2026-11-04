@@ -61,7 +61,7 @@ migrate(
     })
     app.save(configuracao)
     const cfg = new Record(configuracao)
-    cfg.set('nome_associacao', 'Associação de Pais')
+    cfg.set('nome_associacao', 'Associação de Pais EB JI da Serpente')
     cfg.set('ano_letivo', '2026/2027')
     cfg.set('valor_quota', 10)
     cfg.set('saldo_inicial', 0)

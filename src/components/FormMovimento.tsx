@@ -59,10 +59,10 @@ export default function FormMovimento(props: {
       <form onSubmit={guardar}>
         <fieldset disabled={ro}>
           <div className="alternar">
-            <label className={f.tipo === 'receita' ? 'ativo pos' : ''}>
+            <label className={f.tipo === 'receita' ? 'ativo receita' : ''}>
               <input type="radio" name="tipo" checked={f.tipo === 'receita'} onChange={() => setF({ ...f, tipo: 'receita' })} /> Receita
             </label>
-            <label className={f.tipo === 'despesa' ? 'ativo neg' : ''}>
+            <label className={f.tipo === 'despesa' ? 'ativo despesa' : ''}>
               <input type="radio" name="tipo" checked={f.tipo === 'despesa'} onChange={() => setF({ ...f, tipo: 'despesa' })} /> Despesa
             </label>
           </div>
@@ -99,12 +99,12 @@ export default function FormMovimento(props: {
             <input type="file" accept="image/*,application/pdf" onChange={(e) => setFicheiro(e.target.files?.[0] ?? null)} />
           </label>
           {m?.comprovativo && (
-            <p className="pequeno">
+            <p className="ajuda">
               Atual: <a href={pb.files.getURL(m, m.comprovativo)} target="_blank" rel="noreferrer">{m.comprovativo}</a>
             </p>
           )}
           <label className="estreito">Ano letivo<input value={f.ano_letivo} onChange={muda('ano_letivo')} pattern="\d{4}/\d{4}" /></label>
-          {automatico && <p className="subtil pequeno">Este movimento foi criado pelo pagamento de uma quota. Para o anular, use o ecrã Sócios.</p>}
+          {automatico && <p className="ajuda">Este movimento foi criado pelo pagamento de uma quota. Para o anular, use o ecrã Sócios.</p>}
         </fieldset>
         {!ro && (
           <div className="rodape-modal">

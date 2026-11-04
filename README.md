@@ -1,4 +1,4 @@
-# Associação de Pais — app de gestão
+# Associação de Pais EB JI da Serpente — app de gestão
 
 App web gratuita para a direção de uma Associação de Pais (pré-escolar ao 4.º ano) gerir:
 
@@ -40,6 +40,16 @@ As regras são aplicadas no servidor (`pb_migrations/`), não apenas no ecrã.
 Em **Definições → Passar para o ano letivo seguinte**, todos os educandos sobem um ano
 (Pré 3 → Pré 4 → Pré 5 → 1.º → … → 4.º → "Saiu") e as quotas passam a contar para o novo ano.
 Depois disso, reveja as turmas e marque como inativas as famílias que já não têm filhos na escola.
+
+## Identidade visual
+
+As cores e o motivo das folhas vêm do logótipo da associação: verde do texto (`#0a5c2c`), fundo menta,
+castanho do tronco e as cores das folhas — que identificam o ano escolar (Pré laranja, 1.º lima, 2.º turquesa,
+3.º rosa, 4.º roxo) e o tipo de evento. Tipos de letra: Fraunces (títulos) e Figtree (texto), servidos pela
+própria app (sem Google Fonts, por causa do RGPD).
+
+Para trocar o logótipo, substitua em `public/`: `logo.webp`/`logo.jpg` (ecrã de entrada), `emblema.png`
+(árvore, no topo e no relatório) e os ícones `icon-*.png`, `apple-touch-icon.png`, `favicon.png`.
 
 ## Desenvolvimento
 

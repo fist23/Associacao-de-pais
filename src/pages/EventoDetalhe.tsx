@@ -3,11 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { pb } from '../lib/pb'
 import { useSessao } from '../lib/contexto'
 import { ANOS_ESCOLARES, METODOS, type Educando, type Evento, type Inscricao, type Movimento, type Socio } from '../lib/types'
-import { dataPT, euro, exportarCSV, hoje, num, tentar } from '../lib/util'
+import { dataPT, euro, exportarCSV, hoje, num, plural, tentar } from '../lib/util'
 import { anularPagamentoInscricao, pagarInscricao, somar } from '../lib/dados'
 import Modal from '../components/Modal'
 import FormMovimento from '../components/FormMovimento'
 import { FormEvento } from './Eventos'
+import { AnoEscolar, DataBloco, corTipo } from '../components/Visual'
+import { IcClipe, IcLixo } from '../components/Icones'
 
 type EducandoExp = Educando & { expand?: { socio?: Socio } }
 
@@ -96,13 +98,15 @@ export default function EventoDetalhe() {
 
   return (
     <>
-      <p><Link to="/eventos">← Eventos</Link></p>
-      <div className="cabecalho">
-        <div>
-          <h1>{ev.nome}</h1>
-          <p className="subtil">
-            {ev.tipo} · {dataPT(ev.data)}{ev.local ? ` · ${ev.local}` : ''} · <span className="etiqueta estado">{ev.estado}</span>
-          </p>
+      <Link to="/eventos" className="voltar">← Festas e passeios</Link>
+      <div className={`pagina-topo ${corTipo(ev.tipo)}`}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+          <DataBloco data={ev.data} mostrarAno />
+          <div>
+            <span className="tipo"><span className="folha" aria-hidden />{ev.tipo}</span>
+            <h1>{ev.nome}</h1>
+            <p>{ev.local || 'Local por definir'} · <span className="estado">{ev.estado}</span></p>
+          </div>
         </div>
         {podeEditar && (
           <div className="acoes">
@@ -111,82 +115,86 @@ export default function EventoDetalhe() {
           </div>
         )}
       </div>
-      {ev.descricao && <p className="descricao">{ev.descricao}</p>}
+      {ev.descricao && <p style={{ whiteSpace: 'pre-wrap', maxWidth: '70ch' }}>{ev.descricao}</p>}
 
-      <div className="grelha-kpi">
-        <div className="kpi"><span>Inscritos</span><b>{inscricoes.length}{ev.vagas ? ` / ${ev.vagas}` : ''}</b><small>{pagos.length} pago(s)</small></div>
-        <div className="kpi"><span>Receitas</span><b className="pos">{euro(rec)}</b>{porReceber > 0 && <small>{euro(porReceber)} por receber</small>}</div>
-        <div className="kpi"><span>Despesas</span><b className="neg">{euro(desp)}</b></div>
-        <div className="kpi destaque"><span>Resultado</span><b>{euro(rec - desp)}</b></div>
+      <div className="contas">
+        <div className="kpi">
+          <span>Inscritos</span>
+          <b>{inscricoes.length}{ev.vagas ? <small style={{ fontSize: '1rem' }}> / {ev.vagas}</small> : ''}</b>
+          <small>{pagos.length} {pagos.length === 1 ? 'pago' : 'pagos'}</small>
+        </div>
+        <div className="kpi"><span>Receitas</span><b className="receita">{euro(rec)}</b>{porReceber > 0 ? <small>+ {euro(porReceber)} por receber</small> : <small>tudo recebido</small>}</div>
+        <div className="kpi"><span>Despesas</span><b className="despesa">{euro(desp)}</b><small>{plural(movs.filter((m) => m.tipo === 'despesa').length, 'movimento')}</small></div>
+        <div className="kpi saldo"><span>Resultado</span><b>{euro(rec - desp)}</b><small>{rec - desp >= 0 ? 'lucro para a associação' : 'custo para a associação'}</small></div>
       </div>
 
-      <section>
-        <div className="cabecalho">
-          <h2>Inscrições</h2>
-          <div className="acoes">
-            <button className="secundario" onClick={exportar} disabled={!inscricoes.length}>Exportar lista</button>
-            {podeEditar && <button onClick={() => setInscrever(true)}>+ Inscrever</button>}
-          </div>
+      <div className="secao-topo">
+        <h2>Inscrições</h2>
+        <div className="acoes">
+          <button className="secundario" onClick={exportar} disabled={!inscricoes.length}>Exportar lista</button>
+          {podeEditar && <button onClick={() => setInscrever(true)}>Inscrever</button>}
         </div>
-        <div className="tabela-scroll">
-          <table>
-            <thead>
-              <tr><th>Nome</th><th>Ano / turma</th><th>Contacto</th><th className="num">Valor</th><th>Pagamento</th>{podeEditar && <th />}</tr>
-            </thead>
-            <tbody>
-              {inscricoes.map((i) => {
-                const e = eduMap.get(i.educando)
-                return (
-                  <tr key={i.id}>
-                    <td>{i.nome}{!i.educando && <span className="etiqueta">não sócio</span>}{i.notas && <div className="pequeno subtil">{i.notas}</div>}</td>
-                    <td>{e ? `${e.ano_escolar}${e.turma ? ' · ' + e.turma : ''}` : '—'}</td>
-                    <td className="pequeno">{i.contacto || e?.expand?.socio?.telefone || ''}</td>
-                    <td className="num">{euro(i.valor)}</td>
-                    <td>
-                      {i.pago ? (
-                        <span className="etiqueta ok">Pago{podeEditar && <button className="ligacao" onClick={() => anularPag(i)} title="Anular pagamento">✕</button>}</span>
-                      ) : podeEditar ? (
-                        <button className="pequeno" onClick={() => setAPagar(i)}>Marcar pago</button>
-                      ) : (
-                        <span className="etiqueta falta">Por pagar</span>
-                      )}
-                    </td>
-                    {podeEditar && <td><button className="ligacao" onClick={() => remover(i)} aria-label="Remover">🗑</button></td>}
-                  </tr>
-                )
-              })}
-              {inscricoes.length === 0 && <tr><td colSpan={6} className="subtil centro-texto">Sem inscrições.</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section>
-        <div className="cabecalho">
-          <h2>Despesas e outras receitas</h2>
-          {podeEditar && (
-            <div className="acoes">
-              <button className="pos-btn" onClick={() => setMov('receita')}>+ Receita</button>
-              <button className="neg-btn" onClick={() => setMov('despesa')}>+ Despesa</button>
-            </div>
-          )}
-        </div>
-        <div className="tabela-scroll">
-          <table>
-            <tbody>
-              {movs.map((m) => (
-                <tr key={m.id} className="clicavel" onClick={() => setMov(m)}>
-                  <td>{dataPT(m.data)}</td>
-                  <td>{m.descricao}{m.comprovativo && ' 📎'}</td>
-                  <td>{m.categoria}</td>
-                  <td className={`num ${m.tipo === 'receita' ? 'pos' : 'neg'}`}>{m.tipo === 'receita' ? '+' : '−'}{euro(m.valor)}</td>
+      </div>
+      <div className="tabela">
+        <table className="cartoes">
+          <thead>
+            <tr><th>Criança</th><th>Contacto</th><th className="num">Valor</th><th>Pagamento</th>{podeEditar && <th aria-label="Ações" />}</tr>
+          </thead>
+          <tbody>
+            {inscricoes.map((i) => {
+              const e = eduMap.get(i.educando)
+              return (
+                <tr key={i.id}>
+                  <td>
+                    <b>{i.nome}</b>{!i.educando && <span className="marcador">não sócio</span>}
+                    <span className="secundaria">
+                      {e ? <AnoEscolar ano={e.ano_escolar} turma={e.turma} /> : null}
+                      {i.notas && <> {i.notas}</>}
+                    </span>
+                  </td>
+                  <td className="secundaria">{i.contacto || e?.expand?.socio?.telefone || '—'}</td>
+                  <td className="num m-lado">{euro(i.valor)}</td>
+                  <td>
+                    {i.pago ? (
+                      <span className="estado pago">✓ Pago{podeEditar && <button className="ligacao" onClick={() => anularPag(i)} aria-label="Anular pagamento" title="Anular pagamento">✕</button>}</span>
+                    ) : podeEditar ? (
+                      <button className="secundario pequeno" onClick={() => setAPagar(i)}>Registar pagamento</button>
+                    ) : (
+                      <span className="estado falta">Por pagar</span>
+                    )}
+                  </td>
+                  {podeEditar && <td className="num m-lado m-baixo"><button className="icone" onClick={() => remover(i)} aria-label={`Remover ${i.nome}`} title="Remover inscrição"><IcLixo /></button></td>}
                 </tr>
-              ))}
-              {movs.length === 0 && <tr><td className="subtil centro-texto">Sem movimentos ligados a este evento.</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              )
+            })}
+            {inscricoes.length === 0 && <tr><td colSpan={5} className="vazio">Ainda ninguém inscrito.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="secao-topo">
+        <h2>Despesas e outras receitas</h2>
+        {podeEditar && (
+          <div className="acoes">
+            <button className="secundario" onClick={() => setMov('receita')}>+ Receita</button>
+            <button className="despesa-btn" onClick={() => setMov('despesa')}>+ Despesa</button>
+          </div>
+        )}
+      </div>
+      <div className="tabela">
+        <table className="cartoes">
+          <tbody>
+            {movs.map((m) => (
+              <tr key={m.id} className="clicavel" onClick={() => setMov(m)}>
+                <td className="secundaria" style={{ whiteSpace: 'nowrap' }}>{dataPT(m.data)}</td>
+                <td>{m.descricao}{m.comprovativo && <IcClipe />}<span className="secundaria">{m.categoria}</span></td>
+                <td className={`num m-lado ${m.tipo}`}>{m.tipo === 'receita' ? '+' : '−'}{euro(m.valor)}</td>
+              </tr>
+            ))}
+            {movs.length === 0 && <tr><td className="vazio">Sem despesas registadas — autocarro, bilhetes, lanches…</td></tr>}
+          </tbody>
+        </table>
+      </div>
 
       {editar && (
         <FormEvento evento={ev} onFechar={() => setEditar(false)} onGuardado={() => { setEditar(false); carregar() }} />
@@ -297,13 +305,13 @@ function FormInscrever(props: {
               {filtrados.map((e) => (
                 <label key={e.id} className="check">
                   <input type="checkbox" checked={sel.has(e.id)} onChange={() => alternar(e.id)} />
-                  <span>{e.nome} <span className="subtil">{e.ano_escolar}{e.turma ? ' · ' + e.turma : ''}</span></span>
+                  <span>{e.nome} <AnoEscolar ano={e.ano_escolar} turma={e.turma} /></span>
                   <span className="valor">{euro(precoPara(props.evento, e))}</span>
                 </label>
               ))}
-              {filtrados.length === 0 && <p className="subtil">Nenhum educando disponível.</p>}
+              {filtrados.length === 0 && <p className="ajuda" style={{ padding: '0.75rem' }}>Nenhum educando disponível.</p>}
             </div>
-            <p className="subtil pequeno">{sel.size} selecionado(s)</p>
+            <p className="ajuda">{plural(sel.size, 'selecionado')}</p>
           </>
         )}
 
@@ -364,7 +372,7 @@ function FormPagar(props: { inscricao: Inscricao; evento: Evento; onFechar: () =
           <label>Data<input type="date" value={data} onChange={(e) => setData(e.target.value)} required /></label>
         </div>
         <label>Método<select value={metodo} onChange={(e) => setMetodo(e.target.value)}>{METODOS.map((m) => <option key={m}>{m}</option>)}</select></label>
-        <p className="subtil pequeno">É criada automaticamente uma receita na tesouraria ligada a este evento.</p>
+        <p className="ajuda">É criada automaticamente uma receita na tesouraria ligada a este evento.</p>
         <div className="rodape-modal">
           <span className="espaco" />
           <button type="button" className="secundario" onClick={props.onFechar}>Cancelar</button>

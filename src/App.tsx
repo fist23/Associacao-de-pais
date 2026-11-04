@@ -10,6 +10,7 @@ import Eventos from './pages/Eventos'
 import EventoDetalhe from './pages/EventoDetalhe'
 import Tesouraria from './pages/Tesouraria'
 import Definicoes from './pages/Definicoes'
+import { IcDefinicoes, IcEventos, IcPainel, IcSocios, IcTesouraria } from './components/Icones'
 
 export default function App() {
   const [autenticado, setAutenticado] = useState(pb.authStore.isValid)
@@ -47,7 +48,7 @@ export default function App() {
   if (falha)
     return (
       <div className="centro">
-        <div className="cartao">
+        <div className="painel">
           <p>{falha}</p>
           <button onClick={carregar}>Tentar novamente</button>
         </div>
@@ -55,24 +56,46 @@ export default function App() {
     )
   if (!sessao) return <div className="centro">A carregar…</div>
 
+  // "Associação de Pais EB JI da Serpente" -> título + nome da escola
+  const m = sessao.config.nome_associacao.match(/^(associa[çc][ãa]o de pais( e encarregados de educa[çc][ãa]o)?)\s*(d[aoe]s?\s+)?(.*)$/i)
+  const titulo = m ? m[1] : sessao.config.nome_associacao
+  const escola = m ? m[4] : ''
+  const iniciais = sessao.nome.split(/\s+/).map((x) => x[0]).slice(0, 2).join('').toUpperCase()
+
+  const links = [
+    { to: '/', nome: 'Painel', Icone: IcPainel },
+    { to: '/socios', nome: 'Sócios', Icone: IcSocios },
+    { to: '/eventos', nome: 'Eventos', Icone: IcEventos },
+    { to: '/tesouraria', nome: 'Tesouraria', Icone: IcTesouraria },
+    { to: '/definicoes', nome: 'Definições', Icone: IcDefinicoes },
+  ]
+
   return (
     <SessaoCtx.Provider value={sessao}>
       <HashRouter>
         <header className="topo">
-          <div className="marca">
-            <img src="./icon.svg" alt="" width={28} height={28} />
-            <span>{sessao.config.nome_associacao}</span>
-          </div>
-          <nav>
-            <NavLink to="/" end>Painel</NavLink>
-            <NavLink to="/socios">Sócios</NavLink>
-            <NavLink to="/eventos">Eventos</NavLink>
-            <NavLink to="/tesouraria">Tesouraria</NavLink>
-            <NavLink to="/definicoes">Definições</NavLink>
-          </nav>
-          <div className="utilizador">
-            <span>{sessao.nome} · {sessao.config.ano_letivo}</span>
-            <button className="ligacao" onClick={() => pb.authStore.clear()}>Sair</button>
+          <div className="topo-dentro">
+            <NavLink to="/" className="marca">
+              <img className="emblema" src="./emblema.png" alt="" />
+              <span className="marca-texto">
+                <b>{titulo}</b>
+                {escola && <small>{escola}</small>}
+              </span>
+            </NavLink>
+            <nav className="nav-topo" aria-label="Principal">
+              {links.map((l) => (
+                <NavLink key={l.to} to={l.to} end={l.to === '/'}>{l.nome}</NavLink>
+              ))}
+            </nav>
+            <div className="conta">
+              <span className="quem">
+                <b>{sessao.nome}</b>
+                {sessao.config.ano_letivo}
+              </span>
+              <button className="secundario pequeno" onClick={() => pb.authStore.clear()} title={`Sair (${sessao.nome})`}>
+                <span aria-hidden>{iniciais}</span> Sair
+              </button>
+            </div>
           </div>
         </header>
         <main>
@@ -86,6 +109,14 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
+        <nav className="nav-baixo" aria-label="Principal">
+          {links.map(({ to, nome, Icone }) => (
+            <NavLink key={to} to={to} end={to === '/'}>
+              <Icone />
+              {nome}
+            </NavLink>
+          ))}
+        </nav>
       </HashRouter>
     </SessaoCtx.Provider>
   )

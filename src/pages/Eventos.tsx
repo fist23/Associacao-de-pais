@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { pb } from '../lib/pb'
 import { useSessao } from '../lib/contexto'
 import { ESTADOS_EVENTO, TIPOS_EVENTO, type Evento, type Inscricao, type Movimento } from '../lib/types'
-import { dataPT, dia, euro, num, paraPB, tentar } from '../lib/util'
+import { dia, euro, num, paraPB, tentar } from '../lib/util'
 import { somar } from '../lib/dados'
 import Modal from '../components/Modal'
+import { DataBloco, PaginaTopo, corTipo } from '../components/Visual'
 
 export default function Eventos() {
   const { config, podeEditar } = useSessao()
@@ -47,32 +48,36 @@ export default function Eventos() {
 
   return (
     <>
-      <div className="cabecalho">
-        <h1>Festas e passeios</h1>
-        <div className="acoes">
-          <select value={ano} onChange={(e) => setAno(e.target.value)}>
-            {anos.map((a) => <option key={a}>{a}</option>)}
-          </select>
-          {podeEditar && <button onClick={() => setNovo(true)}>+ Novo evento</button>}
-        </div>
-      </div>
+      <PaginaTopo sobre={`Ano letivo ${ano}`} titulo="Festas e passeios">
+        <select value={ano} onChange={(e) => setAno(e.target.value)} aria-label="Ano letivo">
+          {anos.map((a) => <option key={a}>{a}</option>)}
+        </select>
+        {podeEditar && <button onClick={() => setNovo(true)}>Novo evento</button>}
+      </PaginaTopo>
 
-      {eventos.length === 0 && <p className="subtil">Ainda não há eventos em {ano}.</p>}
+      {eventos.length === 0 && (
+        <div className="painel vazio-grande">
+          <img className="emblema" src="./emblema.png" alt="" />
+          <p>Ainda não há eventos em {ano}.</p>
+          {podeEditar && <button onClick={() => setNovo(true)}>Criar o primeiro evento</button>}
+        </div>
+      )}
       <div className="grelha-eventos">
         {eventos.map((e) => {
           const r = porEvento.get(e.id)!
+          const resultado = r.rec - r.desp
           return (
-            <Link to={`/eventos/${e.id}`} key={e.id} className={`cartao evento estado-${e.estado.toLowerCase()}`}>
-              <div className="evento-topo">
-                <span className="etiqueta">{e.tipo}</span>
-                <span className="etiqueta estado">{e.estado}</span>
+            <Link to={`/eventos/${e.id}`} key={e.id} className={`evento ${corTipo(e.tipo)} ${e.estado === 'Cancelado' ? 'cancelado' : ''}`}>
+              <DataBloco data={e.data} mostrarAno />
+              <div>
+                <span className="tipo"><span className="folha" aria-hidden />{e.tipo}</span>
+                <h3>{e.nome}</h3>
+                <span className="secundaria">{e.local || 'Local por definir'} · <span className="estado">{e.estado}</span></span>
               </div>
-              <h3>{e.nome}</h3>
-              <p className="subtil">{dataPT(e.data)}{e.local ? ` · ${e.local}` : ''}</p>
               <div className="evento-numeros">
-                <div><span>Inscritos</span><b>{r.inscritos}{e.vagas ? ` / ${e.vagas}` : ''}</b></div>
-                <div><span>Pagos</span><b>{r.pagos}</b></div>
-                <div><span>Resultado</span><b className={r.rec - r.desp >= 0 ? 'pos' : 'neg'}>{euro(r.rec - r.desp)}</b></div>
+                <span>Inscritos<b>{r.inscritos}{e.vagas ? <small> / {e.vagas}</small> : ''}</b></span>
+                <span>Pagos<b>{r.pagos}</b></span>
+                <span style={{ marginLeft: 'auto', textAlign: 'right' }}>Resultado<b className={resultado >= 0 ? 'receita' : 'despesa'}>{euro(resultado)}</b></span>
               </div>
             </Link>
           )

@@ -5,6 +5,8 @@ import { ANOS_ESCOLARES, METODOS, type Educando, type Quota, type Socio } from '
 import { dataPT, dia, euro, exportarCSV, hoje, num, paraPB, tentar } from '../lib/util'
 import { anularQuota, pagarQuota } from '../lib/dados'
 import Modal from '../components/Modal'
+import { AnoEscolar, PaginaTopo } from '../components/Visual'
+import { useSearchParams } from 'react-router-dom'
 
 type Filtro = 'todos' | 'pagas' | 'falta' | 'inativos'
 
@@ -15,7 +17,8 @@ export default function Socios() {
   const [educandos, setEducandos] = useState<Educando[]>([])
   const [quotas, setQuotas] = useState<Quota[]>([])
   const [pesquisa, setPesquisa] = useState('')
-  const [filtro, setFiltro] = useState<Filtro>('todos')
+  const [params] = useSearchParams()
+  const [filtro, setFiltro] = useState<Filtro>((params.get('f') as Filtro) || 'todos')
   const [aEditar, setAEditar] = useState<Socio | 'novo' | null>(null)
   const [aPagar, setAPagar] = useState<Socio | null>(null)
 
@@ -76,35 +79,38 @@ export default function Socios() {
 
   const proximoNumero = Math.max(0, ...socios.map((s) => s.numero || 0)) + 1
 
+  const totalAtivos = socios.filter((x) => x.ativo).length
+  const pagas = socios.filter((x) => x.ativo && quotaPorSocio.has(x.id)).length
+
   return (
     <>
-      <div className="cabecalho">
-        <h1>Sócios</h1>
-        <div className="acoes">
-          <button className="secundario" onClick={exportar}>Exportar CSV</button>
-          {podeEditar && <button onClick={() => setAEditar('novo')}>+ Novo sócio</button>}
-        </div>
-      </div>
+      <PaginaTopo
+        sobre="Famílias associadas"
+        titulo="Sócios"
+        descricao={`${totalAtivos} sócios ativos · ${pagas} com a quota de ${ano} paga`}
+      >
+        <button className="secundario" onClick={exportar}>Exportar para Excel</button>
+        {podeEditar && <button onClick={() => setAEditar('novo')}>Novo sócio</button>}
+      </PaginaTopo>
 
       <div className="filtros">
-        <input type="search" placeholder="Pesquisar nome, educando, turma…" value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} />
-        <select value={filtro} onChange={(e) => setFiltro(e.target.value as Filtro)}>
-          <option value="todos">Ativos</option>
-          <option value="pagas">Quota {ano} paga</option>
-          <option value="falta">Quota {ano} em falta</option>
+        <input type="search" placeholder="Procurar por nome, educando ou turma" value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} aria-label="Procurar" />
+        <select value={filtro} onChange={(e) => setFiltro(e.target.value as Filtro)} aria-label="Filtro">
+          <option value="todos">Todos os ativos</option>
+          <option value="pagas">Quota paga</option>
+          <option value="falta">Quota por pagar</option>
           <option value="inativos">Inativos</option>
         </select>
-        <span className="subtil">{visiveis.length} sócio(s)</span>
+        <span className="contagem">{visiveis.length} {visiveis.length === 1 ? 'resultado' : 'resultados'}</span>
       </div>
 
-      <div className="tabela-scroll">
-        <table>
+      <div className="tabela">
+        <table className="cartoes">
           <thead>
             <tr>
-              <th>N.º</th>
+              <th className="num">N.º</th>
               <th>Encarregado(a) de educação</th>
               <th>Educandos</th>
-              <th>Contacto</th>
               <th>Quota {ano}</th>
             </tr>
           </thead>
@@ -113,37 +119,40 @@ export default function Socios() {
               const q = quotaPorSocio.get(s.id)
               return (
                 <tr key={s.id}>
-                  <td>{s.numero || '—'}</td>
+                  <td className="num secundaria m-esconder">{s.numero || '—'}</td>
                   <td>
-                    <button className="ligacao forte" onClick={() => setAEditar(s)}>{s.nome}</button>
-                    {!s.consentimento_rgpd && <span className="etiqueta aviso" title="Falta consentimento RGPD">RGPD</span>}
+                    <button className="nome" onClick={() => setAEditar(s)}>{s.nome}</button>
+                    {!s.consentimento_rgpd && <span className="marcador" title="Falta registar o consentimento RGPD">sem RGPD</span>}
+                    <span className="secundaria">
+                      {s.telefone && <a href={`tel:${s.telefone.replace(/\s/g, '')}`}>{s.telefone}</a>}
+                      {s.telefone && s.email && ' · '}
+                      {s.email && <a href={`mailto:${s.email}`}>{s.email}</a>}
+                    </span>
                   </td>
                   <td>
                     {(eduPorSocio.get(s.id) ?? []).map((e) => (
-                      <div key={e.id}>{e.nome} <span className="subtil">{e.ano_escolar}{e.turma ? ` · ${e.turma}` : ''}</span></div>
+                      <div key={e.id}>
+                        {e.nome} <AnoEscolar ano={e.ano_escolar} turma={e.turma} />
+                      </div>
                     ))}
                   </td>
-                  <td className="pequeno">
-                    {s.telefone && <div><a href={`tel:${s.telefone}`}>{s.telefone}</a></div>}
-                    {s.email && <div><a href={`mailto:${s.email}`}>{s.email}</a></div>}
-                  </td>
-                  <td>
+                  <td className="m-lado">
                     {q ? (
-                      <span className="etiqueta ok" title={`${dataPT(q.data_pagamento)} · ${q.metodo}`}>
-                        Paga {euro(q.valor)}
-                        {podeEditar && <button className="ligacao" onClick={() => anular(q)} title="Anular pagamento">✕</button>}
+                      <span className="estado pago" title={`${dataPT(q.data_pagamento)} · ${q.metodo}`}>
+                        ✓ {euro(q.valor)}
+                        {podeEditar && <button className="ligacao" onClick={() => anular(q)} aria-label="Anular pagamento" title="Anular pagamento">✕</button>}
                       </span>
                     ) : podeEditar && s.ativo ? (
-                      <button className="pequeno" onClick={() => setAPagar(s)}>Registar pagamento</button>
+                      <button className="secundario pequeno" onClick={() => setAPagar(s)}>Registar pagamento</button>
                     ) : (
-                      <span className="etiqueta falta">Em falta</span>
+                      <span className="estado falta">Por pagar</span>
                     )}
                   </td>
                 </tr>
               )
             })}
             {visiveis.length === 0 && (
-              <tr><td colSpan={5} className="subtil centro-texto">Nenhum sócio encontrado.</td></tr>
+              <tr><td colSpan={4} className="vazio">{socios.length === 0 ? 'Ainda não há sócios. Comece por registar a primeira família.' : 'Nenhum sócio corresponde à pesquisa.'}</td></tr>
             )}
           </tbody>
         </table>
@@ -263,8 +272,9 @@ function FormSocio(props: {
           </div>
 
           <h3>Educandos</h3>
+          <div className="educandos-form">
           {eds.map((e, i) => (
-            <div className="linha-form educando" key={e.id ?? `n${i}`}>
+            <div className="linha-form" key={e.id ?? `n${i}`}>
               <label>Nome<input value={e.nome} onChange={(x) => mudaEdu(i, 'nome', x.target.value)} /></label>
               <label className="medio">
                 Ano
@@ -273,7 +283,7 @@ function FormSocio(props: {
                 </select>
               </label>
               <label className="estreito">Turma<input value={e.turma} onChange={(x) => mudaEdu(i, 'turma', x.target.value)} placeholder="A" /></label>
-              {!ro && <button type="button" className="ligacao" onClick={() => setEds(eds.filter((_, j) => j !== i))} aria-label="Remover educando">✕</button>}
+              {!ro && <button type="button" onClick={() => setEds(eds.filter((_, j) => j !== i))} aria-label="Remover educando" className="icone">✕</button>}
             </div>
           ))}
           {!ro && (
@@ -281,6 +291,7 @@ function FormSocio(props: {
               + Adicionar educando
             </button>
           )}
+          </div>
 
           <label>Notas<textarea rows={2} value={f.notas} onChange={muda('notas')} /></label>
           <label className="check"><input type="checkbox" checked={f.consentimento_rgpd} onChange={muda('consentimento_rgpd')} /> Autorizou o tratamento dos dados pessoais (RGPD)</label>
@@ -327,7 +338,7 @@ function FormQuota(props: { socio: Socio; ano: string; valor: number; onFechar: 
             {METODOS.map((m) => <option key={m}>{m}</option>)}
           </select>
         </label>
-        <p className="subtil pequeno">É criada automaticamente uma receita na tesouraria (categoria "Quotas").</p>
+        <p className="ajuda">É criada automaticamente uma receita na tesouraria (categoria "Quotas").</p>
         <div className="rodape-modal">
           <span className="espaco" />
           <button type="button" className="secundario" onClick={props.onFechar}>Cancelar</button>

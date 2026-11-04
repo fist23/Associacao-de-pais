@@ -4,6 +4,7 @@ import { useSessao } from '../lib/contexto'
 import type { Papel } from '../lib/types'
 import { num, tentar } from '../lib/util'
 import Modal from '../components/Modal'
+import { PaginaTopo } from '../components/Visual'
 
 interface Utilizador {
   id: string
@@ -79,10 +80,10 @@ export default function Definicoes() {
 
   return (
     <>
-      <h1>Definições</h1>
+      <PaginaTopo sobre="Associação" titulo="Definições" />
 
       <div className="duas-colunas">
-        <section className="cartao">
+        <section className="painel">
           <h2>Associação</h2>
           <form onSubmit={guardarConfig}>
             <fieldset disabled={!admin}>
@@ -94,7 +95,7 @@ export default function Definicoes() {
                   <input inputMode="decimal" value={f.saldo_inicial} onChange={(e) => setF({ ...f, saldo_inicial: e.target.value })} />
                 </label>
               </div>
-              <p className="subtil pequeno">O saldo inicial é o dinheiro que a associação tinha (caixa + banco) quando começou a usar a app.</p>
+              <p className="ajuda">O saldo inicial é o dinheiro que a associação tinha (caixa + banco) quando começou a usar a app.</p>
               <p>Ano letivo atual: <b>{config.ano_letivo}</b></p>
             </fieldset>
             {admin && (
@@ -111,27 +112,29 @@ export default function Definicoes() {
       </div>
 
       {admin && (
-        <section className="cartao">
-          <div className="cabecalho">
+        <>
+          <div className="secao-topo">
             <h2>Membros da direção com acesso</h2>
-            <button onClick={() => setAEditarU('novo')}>+ Adicionar</button>
+            <button onClick={() => setAEditarU('novo')}>Adicionar membro</button>
           </div>
-          <table>
+          <div className="tabela">
+          <table className="cartoes">
             <thead><tr><th>Nome</th><th>Email</th><th>Papel</th></tr></thead>
             <tbody>
               {utilizadores.map((u) => (
                 <tr key={u.id} className="clicavel" onClick={() => setAEditarU(u)}>
-                  <td>{u.name}{u.id === meuId && ' (eu)'}</td>
-                  <td>{u.email}</td>
-                  <td>{NOMES_PAPEL[u.papel]}</td>
+                  <td><b>{u.name}</b>{u.id === meuId && <span className="marcador">eu</span>}</td>
+                  <td className="secundaria">{u.email}</td>
+                  <td className="m-lado"><span className="estado">{NOMES_PAPEL[u.papel]}</span></td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="subtil pequeno">
+          </div>
+          <p className="ajuda" style={{ marginTop: '0.75rem' }}>
             Administrador: tudo. Tesoureiro(a): tudo exceto gerir membros e definições. Direção: registar e editar, sem apagar movimentos da tesouraria. Só consulta: ver.
           </p>
-        </section>
+        </>
       )}
 
       {aEditarU && (
@@ -165,7 +168,7 @@ function MudarPassword() {
     }
   }
   return (
-    <section className="cartao">
+    <section className="painel">
       <h2>A minha palavra-passe</h2>
       <form onSubmit={guardar}>
         <label>Atual<input type="password" value={f.oldPassword} onChange={(e) => setF({ ...f, oldPassword: e.target.value })} required autoComplete="current-password" /></label>
@@ -210,7 +213,7 @@ function FormUtilizador(props: { utilizador: Utilizador | null; eu: boolean; onF
           {u ? 'Nova palavra-passe (deixe vazio para manter)' : 'Palavra-passe inicial *'}
           <input type="text" minLength={8} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} required={!u} autoComplete="off" />
         </label>
-        <p className="subtil pequeno">Comunique a palavra-passe à pessoa e peça-lhe para a alterar em Definições.</p>
+        <p className="ajuda">Comunique a palavra-passe à pessoa e peça-lhe para a alterar em Definições.</p>
         <div className="rodape-modal">
           {u && !props.eu && <button type="button" className="perigo" onClick={remover}>Retirar acesso</button>}
           <span className="espaco" />

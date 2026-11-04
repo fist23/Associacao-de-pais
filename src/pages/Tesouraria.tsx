@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { pb } from '../lib/pb'
 import { useSessao } from '../lib/contexto'
 import type { Evento, Movimento } from '../lib/types'
-import { dataPT, dia, euro, exportarCSV } from '../lib/util'
+import { dataPT, dia, euro, exportarCSV, plural } from '../lib/util'
 import { somar } from '../lib/dados'
 import FormMovimento from '../components/FormMovimento'
+import { PaginaTopo } from '../components/Visual'
+import { IcClipe } from '../components/Icones'
 
 export default function Tesouraria() {
   const { config, podeEditar } = useSessao()
@@ -69,66 +71,63 @@ export default function Tesouraria() {
 
   return (
     <>
-      <div className="cabecalho">
-        <h1>Tesouraria</h1>
-        <div className="acoes">
-          <button className="secundario" onClick={() => setRelatorio(true)}>Relatório de contas</button>
-          <button className="secundario" onClick={exportar}>Exportar CSV</button>
-          {podeEditar && <button className="pos-btn" onClick={() => setAEditar('receita')}>+ Receita</button>}
-          {podeEditar && <button className="neg-btn" onClick={() => setAEditar('despesa')}>+ Despesa</button>}
-        </div>
-      </div>
+      <PaginaTopo sobre={`Ano letivo ${ano}`} titulo="Tesouraria">
+        <button className="secundario" onClick={() => setRelatorio(true)}>Relatório de contas</button>
+        <button className="secundario" onClick={exportar}>Exportar para Excel</button>
+        {podeEditar && <button className="receita-btn" onClick={() => setAEditar('receita')}>+ Receita</button>}
+        {podeEditar && <button className="despesa-btn" onClick={() => setAEditar('despesa')}>+ Despesa</button>}
+      </PaginaTopo>
 
-      <div className="grelha-kpi">
-        <div className="kpi"><span>Saldo no início de {ano}</span><b>{euro(saldoAbertura)}</b></div>
-        <div className="kpi"><span>Receitas</span><b className="pos">{euro(rec)}</b></div>
-        <div className="kpi"><span>Despesas</span><b className="neg">{euro(desp)}</b></div>
-        <div className="kpi destaque"><span>Saldo atual</span><b>{euro(saldoAbertura + rec - desp)}</b></div>
+      <div className="contas">
+        <div className="kpi"><span>Saldo inicial</span><b>{euro(saldoAbertura)}</b><small>no início de {ano}</small></div>
+        <div className="kpi"><span>Receitas</span><b className="receita">+{euro(rec)}</b><small>{plural(doAno.filter((m) => m.tipo === 'receita').length, 'movimento')}</small></div>
+        <div className="kpi"><span>Despesas</span><b className="despesa">−{euro(desp)}</b><small>{plural(doAno.filter((m) => m.tipo === 'despesa').length, 'movimento')}</small></div>
+        <div className="kpi saldo"><span>Saldo</span><b>{euro(saldoAbertura + rec - desp)}</b><small>{ano === config.ano_letivo ? 'atual' : `no fim de ${ano}`}</small></div>
       </div>
 
       <div className="filtros">
-        <select value={ano} onChange={(e) => setAno(e.target.value)}>
+        <input type="search" placeholder="Procurar descrição ou n.º de documento" value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} aria-label="Procurar" />
+        <select value={ano} onChange={(e) => setAno(e.target.value)} aria-label="Ano letivo">
           {anos.map((a) => <option key={a}>{a}</option>)}
         </select>
-        <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
+        <select value={tipo} onChange={(e) => setTipo(e.target.value)} aria-label="Tipo">
           <option value="">Receitas e despesas</option>
           <option value="receita">Só receitas</option>
           <option value="despesa">Só despesas</option>
         </select>
-        <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+        <select value={categoria} onChange={(e) => setCategoria(e.target.value)} aria-label="Categoria">
           <option value="">Todas as categorias</option>
           {categorias.map((c) => <option key={c}>{c}</option>)}
         </select>
-        <input type="search" placeholder="Pesquisar…" value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} />
       </div>
 
-      <div className="tabela-scroll">
-        <table>
+      <div className="tabela">
+        <table className="cartoes">
           <thead>
             <tr>
               <th>Data</th>
               <th>Descrição</th>
               <th>Categoria</th>
-              <th>Método</th>
+              <th>Pagamento</th>
               <th className="num">Valor</th>
             </tr>
           </thead>
           <tbody>
             {visiveis.map((m) => (
               <tr key={m.id} className="clicavel" onClick={() => setAEditar(m)}>
-                <td>{dataPT(m.data)}</td>
+                <td className="secundaria" style={{ whiteSpace: 'nowrap' }}>{dataPT(m.data)}</td>
                 <td>
                   {m.descricao}
-                  {m.evento && <span className="etiqueta">{nomeEvento.get(m.evento)}</span>}
-                  {m.comprovativo && <span title="Tem comprovativo"> 📎</span>}
+                  {m.comprovativo && <IcClipe />}
+                  {m.evento && nomeEvento.get(m.evento) && <span className="secundaria">{nomeEvento.get(m.evento)}</span>}
                 </td>
-                <td>{m.categoria}</td>
-                <td className="pequeno">{m.metodo}{m.documento ? ` · ${m.documento}` : ''}</td>
-                <td className={`num ${m.tipo === 'receita' ? 'pos' : 'neg'}`}>{m.tipo === 'receita' ? '+' : '−'}{euro(m.valor)}</td>
+                <td className="secundaria">{m.categoria}</td>
+                <td className="secundaria m-esconder">{m.metodo}{m.documento ? ` · ${m.documento}` : ''}</td>
+                <td className={`num m-lado ${m.tipo}`}>{m.tipo === 'receita' ? '+' : '−'}{euro(m.valor)}</td>
               </tr>
             ))}
             {visiveis.length === 0 && (
-              <tr><td colSpan={5} className="subtil centro-texto">Sem movimentos.</td></tr>
+              <tr><td colSpan={5} className="vazio">{doAno.length ? 'Nenhum movimento corresponde aos filtros.' : `Ainda não há movimentos em ${ano}.`}</td></tr>
             )}
           </tbody>
         </table>
@@ -167,8 +166,13 @@ function Relatorio(p: { ano: string; nome: string; movimentos: Movimento[]; sald
         <button className="secundario" onClick={p.onFechar}>← Voltar</button>
         <button onClick={() => window.print()}>Imprimir / Guardar PDF</button>
       </div>
-      <h1>{p.nome}</h1>
-      <h2>Relatório de contas — ano letivo {p.ano}</h2>
+      <div className="relatorio-cabecalho">
+        <img src="./emblema.png" alt="" />
+        <div>
+          <h1>{p.nome}</h1>
+          <span className="sobre" style={{ margin: 0 }}>Relatório de contas · ano letivo {p.ano}</span>
+        </div>
+      </div>
 
       <table className="resumo">
         <tbody>
@@ -192,7 +196,7 @@ function Relatorio(p: { ano: string; nome: string; movimentos: Movimento[]; sald
       </div>
 
       <h3>Movimentos</h3>
-      <table className="resumo pequeno">
+      <table className="resumo">
         <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Doc.</th><th className="num">Valor</th></tr></thead>
         <tbody>
           {ordenados.map((m) => (
@@ -206,10 +210,11 @@ function Relatorio(p: { ano: string; nome: string; movimentos: Movimento[]; sald
           ))}
         </tbody>
       </table>
-      <p className="assinaturas">
+      <p className="ajuda">Emitido em {new Date().toLocaleDateString('pt-PT')}.</p>
+      <div className="assinaturas">
         <span>O(A) Tesoureiro(a)</span>
-        <span>O(A) Presidente</span>
-      </p>
+        <span>O(A) Presidente da Direção</span>
+      </div>
     </div>
   )
 }

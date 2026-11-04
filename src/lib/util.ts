@@ -54,3 +54,6 @@ export async function tentar(f: () => Promise<unknown>) {
     return false
   }
 }
+
+/** plural(1, 'movimento') -> '1 movimento'; plural(3, 'movimento') -> '3 movimentos' */
+export const plural = (n: number, palavra: string) => `${n} ${palavra}${n === 1 ? '' : 's'}`
