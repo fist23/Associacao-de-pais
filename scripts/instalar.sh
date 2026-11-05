@@ -129,10 +129,11 @@ if [ -n "$DOMINIO" ]; then
     ufw allow 80/tcp >/dev/null; ufw allow 443/tcp >/dev/null
   fi
   # As imagens Ubuntu da Oracle Cloud trazem regras iptables que bloqueiam tudo exceto SSH
-  if iptables -S INPUT 2>/dev/null | grep -q "REJECT"; then
+  POS=$(iptables -L INPUT --line-numbers -n 2>/dev/null | awk '$2 == "REJECT" {print $1; exit}')
+  if [ -n "$POS" ]; then
     for p in 443 80; do
       iptables -C INPUT -p tcp --dport $p -m state --state NEW -j ACCEPT 2>/dev/null ||
-        iptables -I INPUT 5 -p tcp --dport $p -m state --state NEW -j ACCEPT
+        iptables -I INPUT "$POS" -p tcp --dport $p -m state --state NEW -j ACCEPT
     done
     command -v netfilter-persistent >/dev/null && netfilter-persistent save >/dev/null || true
   fi
