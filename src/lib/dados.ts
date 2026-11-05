@@ -2,12 +2,14 @@
 import { pb } from './pb'
 import type { Evento, Inscricao, Movimento, Quota, Socio } from './types'
 import { paraPB } from './util'
+import { contaDoMetodo } from './tesouraria'
 
-type NovoMovimento = Omit<Movimento, 'id' | 'created' | 'documento' | 'evento' | 'socio'> &
-  Partial<Pick<Movimento, 'documento' | 'evento' | 'socio'>>
+type NovoMovimento = Omit<Movimento, 'id' | 'created' | 'documento' | 'evento' | 'socio' | 'conta' | 'conta_destino'> &
+  Partial<Pick<Movimento, 'documento' | 'evento' | 'socio' | 'conta' | 'conta_destino'>>
 
 export function criarMovimento(m: NovoMovimento) {
   return pb.collection('movimentos').create<Movimento>({
+    conta: contaDoMetodo(m.metodo),
     ...m,
     data: paraPB(m.data),
     criado_por: pb.authStore.record?.id,

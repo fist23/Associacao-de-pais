@@ -26,7 +26,8 @@ export default function Definicoes() {
   const [f, setF] = useState({
     nome_associacao: config.nome_associacao,
     valor_quota: String(config.valor_quota).replace('.', ','),
-    saldo_inicial: String(config.saldo_inicial).replace('.', ','),
+    saldo_inicial_caixa: String(config.saldo_inicial_caixa ?? 0).replace('.', ','),
+    saldo_inicial_banco: String(config.saldo_inicial_banco ?? 0).replace('.', ','),
   })
   const [utilizadores, setUtilizadores] = useState<Utilizador[]>([])
   const [aEditarU, setAEditarU] = useState<Utilizador | 'novo' | null>(null)
@@ -41,7 +42,13 @@ export default function Definicoes() {
   async function guardarConfig(e: FormEvent) {
     e.preventDefault()
     const ok = await tentar(() =>
-      pb.collection('configuracao').update(config.id, { ...f, valor_quota: num(f.valor_quota), saldo_inicial: num(f.saldo_inicial) }),
+      pb.collection('configuracao').update(config.id, {
+        ...f,
+        valor_quota: num(f.valor_quota),
+        saldo_inicial_caixa: num(f.saldo_inicial_caixa),
+        saldo_inicial_banco: num(f.saldo_inicial_banco),
+        saldo_inicial: num(f.saldo_inicial_caixa) + num(f.saldo_inicial_banco),
+      }),
     )
     if (ok) {
       await recarregarConfig()
@@ -59,14 +66,18 @@ export default function Definicoes() {
           <form onSubmit={guardarConfig}>
             <fieldset disabled={!admin}>
               <label>Nome<input value={f.nome_associacao} onChange={(e) => setF({ ...f, nome_associacao: e.target.value })} required /></label>
+              <label className="estreito-label" style={{ maxWidth: 200 }}>Quota anual (€)<input inputMode="decimal" value={f.valor_quota} onChange={(e) => setF({ ...f, valor_quota: e.target.value })} /></label>
               <div className="linha-form">
-                <label>Quota anual (€)<input inputMode="decimal" value={f.valor_quota} onChange={(e) => setF({ ...f, valor_quota: e.target.value })} /></label>
                 <label>
-                  Saldo inicial (€)
-                  <input inputMode="decimal" value={f.saldo_inicial} onChange={(e) => setF({ ...f, saldo_inicial: e.target.value })} />
+                  Saldo inicial na Caixa (€)
+                  <input inputMode="decimal" value={f.saldo_inicial_caixa} onChange={(e) => setF({ ...f, saldo_inicial_caixa: e.target.value })} />
+                </label>
+                <label>
+                  Saldo inicial no Banco (€)
+                  <input inputMode="decimal" value={f.saldo_inicial_banco} onChange={(e) => setF({ ...f, saldo_inicial_banco: e.target.value })} />
                 </label>
               </div>
-              <p className="ajuda">O saldo inicial é o dinheiro que a associação tinha (caixa + banco) quando começou a usar a app.</p>
+              <p className="ajuda">Quanto dinheiro a associação tinha em numerário e no banco quando começou a usar a app.</p>
               <p>Ano letivo atual: <b>{config.ano_letivo}</b></p>
             </fieldset>
             {admin && (

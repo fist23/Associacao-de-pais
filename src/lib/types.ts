@@ -10,6 +10,8 @@ export interface Configuracao extends Base {
   ano_letivo: string
   valor_quota: number
   saldo_inicial: number
+  saldo_inicial_caixa: number
+  saldo_inicial_banco: number
 }
 
 export interface Socio extends Base {
@@ -47,9 +49,15 @@ export const METODOS = ['Numerário', 'MB WAY', 'Transferência', 'Multibanco', 
 export const CATEGORIAS_RECEITA = ['Quotas', 'Eventos', 'Donativos', 'Angariação de fundos', 'Subsídios', 'Outras receitas']
 export const CATEGORIAS_DESPESA = ['Eventos', 'Material', 'Transportes', 'Alimentação', 'Ofertas', 'Despesas bancárias', 'Outras despesas']
 
+export type Conta = 'Caixa' | 'Banco'
+export const CONTAS: Conta[] = ['Caixa', 'Banco']
+
 export interface Movimento extends Base {
   data: string
-  tipo: 'receita' | 'despesa'
+  /** 'transferencia' = depósito ou levantamento entre Caixa e Banco (não é receita nem despesa) */
+  tipo: 'receita' | 'despesa' | 'transferencia'
+  conta: Conta | ''
+  conta_destino: Conta | ''
   categoria: string
   descricao: string
   valor: number
@@ -89,6 +97,22 @@ export interface Inscricao extends Base {
   contacto: string
   valor: number
   pago: boolean
+  movimento: string
+  notas: string
+}
+
+export interface Vale extends Base {
+  numero: number
+  ano_letivo: string
+  data: string
+  beneficiario: string
+  motivo: string
+  valor_entregue: number
+  evento: string
+  estado: 'Pendente' | 'Regularizado' | 'Anulado'
+  data_regularizacao: string
+  valor_gasto: number
+  documento: string
   movimento: string
   notas: string
 }

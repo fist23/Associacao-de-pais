@@ -11,6 +11,7 @@ import EventoDetalhe from './pages/EventoDetalhe'
 import Tesouraria from './pages/Tesouraria'
 import Definicoes from './pages/Definicoes'
 import PassagemAno from './pages/PassagemAno'
+import Vales from './pages/Vales'
 import { IcDefinicoes, IcEventos, IcPainel, IcSocios, IcTesouraria } from './components/Icones'
 
 export default function App() {
@@ -106,6 +107,7 @@ export default function App() {
             <Route path="/eventos" element={<Eventos />} />
             <Route path="/eventos/:id" element={<EventoDetalhe />} />
             <Route path="/tesouraria" element={<Tesouraria />} />
+            <Route path="/tesouraria/vales" element={<Vales />} />
             <Route path="/definicoes" element={<Definicoes />} />
             <Route path="/passagem-ano" element={<PassagemAno />} />
             <Route path="*" element={<Navigate to="/" />} />

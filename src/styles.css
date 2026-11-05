@@ -416,6 +416,41 @@ fieldset.fases-preco legend { font-size: 0.85rem; font-weight: 700; color: var(-
 .prazo.fechado { color: var(--despesa); }
 
 /* ---------------------------------------------------------------------
+   Tesouraria: separadores, contas e vales de caixa
+   --------------------------------------------------------------------- */
+.separadores { display: flex; gap: 0.25rem; border-bottom: 1.5px solid var(--linha-forte); margin: -0.5rem 0 1.25rem; }
+.separadores a { padding: 0.55rem 0.9rem; text-decoration: none; font-weight: 700; color: var(--tinta-2); border-bottom: 3px solid transparent; margin-bottom: -1.5px; }
+.separadores a:hover { color: var(--verde); }
+.separadores a.active { color: var(--verde); border-bottom-color: var(--verde); }
+.contas.contas-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 760px) {
+  .contas.contas-3 { grid-template-columns: 1fr; }
+  .contas.contas-3 .kpi { border-left: 0; }
+  .contas.contas-3 .kpi + .kpi { border-top: 1px solid var(--linha); }
+}
+.kpi b.alerta-texto { color: var(--alerta); }
+td.transferencia { color: var(--tinta-2); }
+.aviso-caixa.neutro { background: var(--verde-claro); color: var(--verde); }
+
+.vale-folha { border: 1.5px solid var(--linha-forte); border-radius: var(--raio); padding: 1.25rem 1.4rem; break-inside: avoid; }
+.vale-cabecalho { display: flex; align-items: center; gap: 0.8rem; border-bottom: 2px solid var(--verde); padding-bottom: 0.75rem; margin-bottom: 1rem; }
+.vale-cabecalho img { width: 56px; height: 56px; }
+.vale-cabecalho > div:nth-child(2) { display: flex; flex-direction: column; line-height: 1.25; flex: 1; }
+.vale-cabecalho b { font-family: var(--serif); color: var(--verde); font-size: 1.1rem; }
+.vale-cabecalho span { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tronco); }
+.vale-numero { text-align: right; }
+.vale-numero b { display: block; font-size: 1.4rem; color: var(--tinta); }
+.vale-valor { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; background: var(--papel-2); border: 1px solid var(--linha); border-radius: var(--raio); padding: 0.6rem 0.9rem; margin-bottom: 1rem; }
+.vale-valor b { font-family: var(--serif); font-size: 1.7rem; }
+.vale-valor span { font-style: italic; color: var(--tinta-2); }
+.vale-dados { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 1rem; margin: 0 0 1rem; }
+.vale-dados dt { font-weight: 700; color: var(--tinta-3); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.vale-dados dd { margin: 0; }
+.vale-declaracao { font-size: 0.88rem; color: var(--tinta-2); }
+.vale-folha .assinaturas { margin-top: 2.75rem; }
+.vale-corte { text-align: center; color: var(--tinta-3); letter-spacing: 0.1em; overflow: hidden; white-space: nowrap; margin: 1.5rem 0; }
+
+/* ---------------------------------------------------------------------
    Passagem de ano letivo
    --------------------------------------------------------------------- */
 a.botao { text-decoration: none; }

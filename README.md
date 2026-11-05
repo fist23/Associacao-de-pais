@@ -4,7 +4,7 @@ App web gratuita para a direção de uma Associação de Pais (pré-escolar ao 4
 
 - **Sócios** — famílias, encarregados de educação, educandos (Pré 3/4/5 anos, 1.º–4.º ano, turma), quotas anuais pagas/em falta, consentimento RGPD.
 - **Festas e passeios** — eventos com preço de sócio/não sócio (opcionalmente mais barato até uma data), data limite de inscrição, vagas, inscrições (individual, turma inteira ou não sócios), pagamentos, despesas e resultado de cada evento, lista de inscritos para exportar.
-- **Tesouraria** — receitas e despesas por categoria, n.º de fatura/recibo, saldo, filtros por ano letivo, exportação para Excel (CSV) e **relatório de contas** pronto a imprimir para a Assembleia Geral.
+- **Tesouraria** — receitas e despesas por categoria, saldos separados de **Caixa** (numerário) e **Banco**, depósitos e levantamentos, **vales de caixa** (adiantamentos em dinheiro, numerados e impressos para assinar, regularizados com fatura e troco), n.º de fatura/recibo, exportação para Excel (CSV) e **relatório de contas** pronto a imprimir para a Assembleia Geral.
 
 Pagar uma quota ou marcar uma inscrição como paga cria automaticamente a receita na tesouraria — não é preciso registar duas vezes.
 

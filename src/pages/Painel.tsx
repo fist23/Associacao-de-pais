@@ -5,10 +5,13 @@ import { useSessao } from '../lib/contexto'
 import type { Evento, Movimento } from '../lib/types'
 import { euro, hoje } from '../lib/util'
 import { somar } from '../lib/dados'
+import { saldos } from '../lib/tesouraria'
 import { DataBloco, PaginaTopo, corTipo } from '../components/Visual'
 
 interface Resumo {
   saldo: number
+  caixa: number
+  banco: number
   receitasAno: number
   despesasAno: number
   socios: number
@@ -25,7 +28,7 @@ export default function Painel() {
     ;(async () => {
       const ano = config.ano_letivo
       const [todos, socios, quotas, eventos] = await Promise.all([
-        pb.collection('movimentos').getFullList<Movimento>({ fields: 'tipo,valor,categoria,ano_letivo' }),
+        pb.collection('movimentos').getFullList<Movimento>({ fields: 'tipo,valor,categoria,ano_letivo,conta,conta_destino,metodo' }),
         pb.collection('socios').getList(1, 1, { filter: 'ativo = true', fields: 'id' }),
         pb.collection('quotas').getList(1, 1, { filter: pb.filter('ano_letivo = {:ano}', { ano }), fields: 'id' }),
         pb.collection('eventos').getList<Evento>(1, 5, {
@@ -35,13 +38,15 @@ export default function Painel() {
       ])
       const doAno = todos.filter((m) => m.ano_letivo === ano)
       const cats = new Map<string, { receita: number; despesa: number }>()
-      for (const m of doAno) {
+      for (const m of doAno.filter((x) => x.tipo !== 'transferencia')) {
         const c = cats.get(m.categoria) ?? { receita: 0, despesa: 0 }
-        c[m.tipo] += m.valor
+        c[m.tipo as 'receita' | 'despesa'] += m.valor
         cats.set(m.categoria, c)
       }
       setR({
-        saldo: config.saldo_inicial + somar(todos, 'receita') - somar(todos, 'despesa'),
+        saldo: saldos(todos, config).total,
+        caixa: saldos(todos, config).caixa,
+        banco: saldos(todos, config).banco,
         receitasAno: somar(doAno, 'receita'),
         despesasAno: somar(doAno, 'despesa'),
         socios: socios.totalItems,
@@ -62,7 +67,7 @@ export default function Painel() {
       <PaginaTopo sobre={`Ano letivo ${config.ano_letivo}`} titulo={`Olá, ${primeiroNome}`} />
 
       <div className="contas">
-        <div className="kpi saldo"><span>Saldo atual</span><b>{euro(r.saldo)}</b><small>caixa + banco</small></div>
+        <div className="kpi saldo"><span>Saldo atual</span><b>{euro(r.saldo)}</b><small>caixa {euro(r.caixa)} · banco {euro(r.banco)}</small></div>
         <div className="kpi"><span>Receitas</span><b className="receita">{euro(r.receitasAno)}</b><small>neste ano letivo</small></div>
         <div className="kpi"><span>Despesas</span><b className="despesa">{euro(r.despesasAno)}</b><small>neste ano letivo</small></div>
         <div className="kpi">
