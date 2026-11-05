@@ -410,6 +410,21 @@ span.secundaria { display: block; }
 .assinaturas span { border-top: 1px solid var(--tinta); padding-top: 0.35rem; min-width: 220px; text-align: center; font-size: 0.9rem; }
 
 /* ---------------------------------------------------------------------
+   Passagem de ano letivo
+   --------------------------------------------------------------------- */
+a.botao { text-decoration: none; }
+a.botao.secundario { background: var(--papel); color: var(--verde); border-color: var(--linha-forte); }
+.passagem-resumo { display: flex; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; position: sticky; top: 72px; z-index: 5; }
+.passagem-resumo > div { display: flex; flex-direction: column; line-height: 1.2; padding-bottom: 0.35rem; }
+.passagem-resumo > div b { font-family: var(--serif); font-size: 1.5rem; color: var(--tinta); }
+.passagem-resumo > div span { font-size: 0.82rem; color: var(--tinta-3); }
+.passagem-resumo > label { flex: 0 0 150px; margin: 0; }
+.passagem-resumo > button { margin-left: auto; }
+tr.retido td { background: var(--alerta-fundo); }
+.secao-topo h2 .folha { width: 0.8em; height: 0.8em; }
+@media (max-width: 860px) { .passagem-resumo { top: 62px; gap: 1rem; } .passagem-resumo > button { width: 100%; margin-left: 0; } }
+
+/* ---------------------------------------------------------------------
    Tabelas em cartões no telemóvel
    td.m-lado: coluna da direita (valor / estado); td.m-esconder: oculto
    --------------------------------------------------------------------- */

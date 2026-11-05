@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { pb } from '../lib/pb'
 import { useSessao } from '../lib/contexto'
 import type { Papel } from '../lib/types'
@@ -48,36 +49,6 @@ export default function Definicoes() {
     }
   }
 
-  async function passarAno() {
-    const [a] = config.ano_letivo.split('/').map(Number)
-    const sugestao = `${a + 1}/${a + 2}`
-    const novo = prompt(
-      `Passagem de ano letivo\n\nTodos os educandos sobem um ano (Pré 3 → Pré 4 → Pré 5 → 1.º → … → 4.º → "Saiu").\nAs quotas passam a contar para o novo ano.\n\nNovo ano letivo:`,
-      sugestao,
-    )
-    if (!novo) return
-    if (!/^\d{4}\/\d{4}$/.test(novo)) return alert('Formato inválido. Use, por exemplo, 2027/2028.')
-    if (!confirm(`Confirma a passagem para ${novo}? Esta operação não se desfaz automaticamente.`)) return
-    const seguinte: Record<string, string> = {
-      'Pré 3 anos': 'Pré 4 anos',
-      'Pré 4 anos': 'Pré 5 anos',
-      'Pré 5 anos': '1.º',
-      '1.º': '2.º',
-      '2.º': '3.º',
-      '3.º': '4.º',
-      '4.º': 'Saiu',
-    }
-    const ok = await tentar(async () => {
-      const eds = await pb.collection('educandos').getFullList({ filter: 'ano_escolar != "Saiu"', fields: 'id,ano_escolar' })
-      for (const e of eds) await pb.collection('educandos').update(e.id, { ano_escolar: seguinte[e.ano_escolar] ?? e.ano_escolar })
-      await pb.collection('configuracao').update(config.id, { ano_letivo: novo })
-    })
-    if (ok) {
-      alert(`Ano letivo ${novo} iniciado. Reveja as turmas dos educandos no ecrã Sócios.`)
-      await recarregarConfig()
-    }
-  }
-
   return (
     <>
       <PaginaTopo sobre="Associação" titulo="Definições" />
@@ -100,7 +71,7 @@ export default function Definicoes() {
             </fieldset>
             {admin && (
               <div className="rodape-modal">
-                <button type="button" className="secundario" onClick={passarAno}>Passar para o ano letivo seguinte…</button>
+                <Link to="/passagem-ano" className="botao secundario">Passar para o ano letivo seguinte…</Link>
                 <span className="espaco" />
                 <button type="submit">Guardar</button>
               </div>

@@ -38,9 +38,10 @@ As regras são aplicadas no servidor (`pb_migrations/`), não apenas no ecrã.
 
 ## Passagem de ano letivo
 
-Em **Definições → Passar para o ano letivo seguinte**, todos os educandos sobem um ano
-(Pré 3 → Pré 4 → Pré 5 → 1.º → … → 4.º → "Saiu") e as quotas passam a contar para o novo ano.
-Depois disso, reveja as turmas e marque como inativas as famílias que já não têm filhos na escola.
+Em **Definições → Passar para o ano letivo seguinte** abre-se um ecrã de revisão com todos os educandos e o ano
+proposto (Pré 3 → Pré 4 → Pré 5 → 1.º → … → 4.º → "Saiu"). Antes de confirmar pode marcar quem **fica retido**,
+mudar o ano ou a turma de qualquer educando. Quem passa do pré-escolar para o 1.º ano fica com a turma em branco.
+Durante o ano, o ano e a turma de um educando também se mudam na ficha do sócio.
 
 ## Identidade visual
 
