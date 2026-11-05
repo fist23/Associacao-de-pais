@@ -6,7 +6,6 @@ import { dataPT, dia, euro, exportarCSV, plural } from '../lib/util'
 import { somar } from '../lib/dados'
 import FormMovimento from '../components/FormMovimento'
 import { PaginaTopo } from '../components/Visual'
-import { IcClipe } from '../components/Icones'
 
 export default function Tesouraria() {
   const { config, podeEditar } = useSessao()
@@ -118,7 +117,6 @@ export default function Tesouraria() {
                 <td className="secundaria" style={{ whiteSpace: 'nowrap' }}>{dataPT(m.data)}</td>
                 <td>
                   {m.descricao}
-                  {m.comprovativo && <IcClipe />}
                   {m.evento && nomeEvento.get(m.evento) && <span className="secundaria">{nomeEvento.get(m.evento)}</span>}
                 </td>
                 <td className="secundaria">{m.categoria}</td>

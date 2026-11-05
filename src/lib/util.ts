@@ -58,26 +58,3 @@ export async function tentar(f: () => Promise<unknown>) {
 /** plural(1, 'movimento') -> '1 movimento'; plural(3, 'movimento') -> '3 movimentos' */
 export const plural = (n: number, palavra: string) => `${n} ${palavra}${n === 1 ? '' : 's'}`
 
-/**
- * Prepara um comprovativo para envio: fotografias são reduzidas (máx. 1600 px, JPEG)
- * para poupar espaço no servidor; PDFs são aceites até 1 MB.
- */
-export async function prepararComprovativo(f: File): Promise<File> {
-  const LIMITE = 1024 * 1024
-  if (!f.type.startsWith('image/')) {
-    if (f.size > LIMITE) throw new Error('O PDF tem mais de 1 MB. Digitalize com menor qualidade ou tire uma fotografia.')
-    return f
-  }
-  const img = await createImageBitmap(f)
-  const escala = Math.min(1, 1600 / Math.max(img.width, img.height))
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.round(img.width * escala)
-  canvas.height = Math.round(img.height * escala)
-  canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
-  img.close()
-  for (const q of [0.8, 0.65, 0.5, 0.35]) {
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', q))
-    if (blob && blob.size <= LIMITE) return new File([blob], f.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' })
-  }
-  throw new Error('Não foi possível reduzir a fotografia para menos de 1 MB.')
-}

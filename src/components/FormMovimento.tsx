@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { pb } from '../lib/pb'
 import { useSessao } from '../lib/contexto'
 import { CATEGORIAS_DESPESA, CATEGORIAS_RECEITA, METODOS, type Evento, type Movimento } from '../lib/types'
-import { dia, hoje, num, paraPB, prepararComprovativo, tentar } from '../lib/util'
+import { dia, hoje, num, paraPB, tentar } from '../lib/util'
 import Modal from './Modal'
 
 export default function FormMovimento(props: {
@@ -26,7 +26,6 @@ export default function FormMovimento(props: {
     evento: m?.evento ?? props.evento?.id ?? '',
     ano_letivo: m?.ano_letivo ?? props.evento?.ano_letivo ?? config.ano_letivo,
   })
-  const [ficheiro, setFicheiro] = useState<File | null>(null)
   const [aGuardar, setAGuardar] = useState(false)
   const ro = !podeEditar
   const automatico = Boolean(m && (m.categoria === 'Quotas' && m.socio))
@@ -39,14 +38,6 @@ export default function FormMovimento(props: {
     if (num(f.valor) <= 0) return alert('O valor tem de ser maior que zero.')
     setAGuardar(true)
     const dados: Record<string, unknown> = { ...f, valor: num(f.valor), data: paraPB(f.data) }
-    if (ficheiro) {
-      try {
-        dados.comprovativo = await prepararComprovativo(ficheiro)
-      } catch (err) {
-        setAGuardar(false)
-        return alert((err as Error).message)
-      }
-    }
     const ok = await tentar(() =>
       m
         ? pb.collection('movimentos').update(m.id, dados)
@@ -101,15 +92,6 @@ export default function FormMovimento(props: {
             </label>
             <label>N.º fatura / recibo<input value={f.documento} onChange={muda('documento')} /></label>
           </div>
-          <label>
-            Comprovativo (fotografia ou PDF até 1 MB)
-            <input type="file" accept="image/*,application/pdf" onChange={(e) => setFicheiro(e.target.files?.[0] ?? null)} />
-          </label>
-          {m?.comprovativo && (
-            <p className="ajuda">
-              Atual: <a href={pb.files.getURL(m, m.comprovativo)} target="_blank" rel="noreferrer">{m.comprovativo}</a>
-            </p>
-          )}
           <label className="estreito">Ano letivo<input value={f.ano_letivo} onChange={muda('ano_letivo')} pattern="\d{4}/\d{4}" /></label>
           {automatico && <p className="ajuda">Este movimento foi criado pelo pagamento de uma quota. Para o anular, use o ecrã Sócios.</p>}
         </fieldset>

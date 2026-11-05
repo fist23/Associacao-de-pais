@@ -186,4 +186,4 @@ Raspberry Pi OS (um Raspberry Pi 3 ou superior chega) e de um domínio na Cloudf
 - Registe o consentimento de cada família (campo "Autorizou o tratamento dos dados pessoais"); os sócios sem consentimento aparecem com a marca **sem RGPD**.
 - Dê a cada membro da direção o papel mínimo necessário e retire o acesso quando sair da direção.
 - Famílias que saem da escola: marque como inativas e, passado o prazo definido pela associação (ex.: 1 ano), apague-as.
-- Não carregue comprovativos com dados de saúde ou outros dados sensíveis.
+- A app não guarda fotografias nem ficheiros; guarde as faturas em papel ou na pasta da associação.

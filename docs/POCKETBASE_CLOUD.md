@@ -68,11 +68,9 @@ Sem cartão, a instância é pausada e deixa de aceitar atualizações. Leia as 
 
 ## Espaço (50 MB)
 
-O plano gratuito tem **50 MB**, contando dados, comprovativos e cópias de segurança guardadas na instância.
-
-- **Dados:** centenas de sócios, eventos e movimentos ocupam poucos MB.
-- **Comprovativos:** as fotografias de faturas são reduzidas automaticamente pela app, ficando cerca de 200–300 KB cada. Os PDFs têm um limite de 1 MB.
-- **Na prática:** dá para vários anos. Para poupar espaço, não é obrigatório anexar comprovativo a todos os movimentos.
+O plano gratuito tem **50 MB**, contando os dados e as cópias de segurança guardadas na instância.
+A app não guarda fotografias nem ficheiros (só o n.º da fatura ou recibo), por isso centenas de sócios, eventos e
+movimentos ocupam poucos MB — chega para muitos anos. Guarde as faturas em papel ou na pasta da associação no Google Drive.
 
 ## Cópias de segurança (1× por mês)
 

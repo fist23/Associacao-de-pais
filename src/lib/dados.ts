@@ -3,7 +3,7 @@ import { pb } from './pb'
 import type { Evento, Inscricao, Movimento, Quota, Socio } from './types'
 import { paraPB } from './util'
 
-type NovoMovimento = Omit<Movimento, 'id' | 'created' | 'comprovativo' | 'documento' | 'evento' | 'socio'> &
+type NovoMovimento = Omit<Movimento, 'id' | 'created' | 'documento' | 'evento' | 'socio'> &
   Partial<Pick<Movimento, 'documento' | 'evento' | 'socio'>>
 
 export function criarMovimento(m: NovoMovimento) {

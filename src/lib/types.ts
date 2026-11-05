@@ -55,7 +55,6 @@ export interface Movimento extends Base {
   valor: number
   metodo: string
   documento: string
-  comprovativo: string
   ano_letivo: string
   evento: string
   socio: string

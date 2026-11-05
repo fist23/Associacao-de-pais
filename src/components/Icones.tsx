@@ -19,9 +19,3 @@ export const IcDefinicoes = () => (
 export const IcLixo = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden {...p}><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12" /></svg>
 )
-export const IcClipe = ({ titulo = 'Tem comprovativo' }: { titulo?: string }) => (
-  <svg viewBox="0 0 24 24" width="15" height="15" role="img" aria-label={titulo} style={{ verticalAlign: '-2px', marginLeft: 6, color: 'var(--tinta-3)' }} {...p}>
-    <title>{titulo}</title>
-    <path d="m15.5 7.5-6.4 6.4a1.8 1.8 0 0 0 2.5 2.5l6.6-6.6a3.5 3.5 0 0 0-5-5L6.6 11.4a5.2 5.2 0 0 0 7.4 7.4l5-5" />
-  </svg>
-)

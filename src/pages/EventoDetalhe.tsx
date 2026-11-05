@@ -9,7 +9,7 @@ import Modal from '../components/Modal'
 import FormMovimento from '../components/FormMovimento'
 import { FormEvento } from './Eventos'
 import { AnoEscolar, DataBloco, corTipo } from '../components/Visual'
-import { IcClipe, IcLixo } from '../components/Icones'
+import { IcLixo } from '../components/Icones'
 
 type EducandoExp = Educando & { expand?: { socio?: Socio } }
 
@@ -187,7 +187,7 @@ export default function EventoDetalhe() {
             {movs.map((m) => (
               <tr key={m.id} className="clicavel" onClick={() => setMov(m)}>
                 <td className="secundaria" style={{ whiteSpace: 'nowrap' }}>{dataPT(m.data)}</td>
-                <td>{m.descricao}{m.comprovativo && <IcClipe />}<span className="secundaria">{m.categoria}</span></td>
+                <td>{m.descricao}<span className="secundaria">{m.categoria}</span></td>
                 <td className={`num m-lado ${m.tipo}`}>{m.tipo === 'receita' ? '+' : '−'}{euro(m.valor)}</td>
               </tr>
             ))}
