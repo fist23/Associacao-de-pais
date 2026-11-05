@@ -244,7 +244,7 @@ function FormInscrever(props: {
   const [modo, setModo] = useState<'educandos' | 'turma' | 'externo'>('educandos')
   const [pesquisa, setPesquisa] = useState('')
   const [sel, setSel] = useState<Set<string>>(new Set())
-  const [anoEsc, setAnoEsc] = useState('1.º')
+  const [anoEsc, setAnoEsc] = useState('')
   const [turma, setTurma] = useState('')
   const [nome, setNome] = useState('')
   const [contacto, setContacto] = useState('')
@@ -255,8 +255,18 @@ function FormInscrever(props: {
   const filtrados = disponiveis.filter((e) =>
     `${e.nome} ${e.ano_escolar} ${e.turma} ${e.expand?.socio?.nome ?? ''}`.toLowerCase().includes(pesquisa.toLowerCase()),
   )
-  const turmas = [...new Set(props.educandos.filter((e) => e.ano_escolar === anoEsc).map((e) => e.turma))].sort()
-  const daTurma = disponiveis.filter((e) => e.ano_escolar === anoEsc && (!turma || e.turma === turma))
+  // Turmas (incluindo mistas, ex.: "Mista" com 1.º e 2.º) e os anos que cada uma tem
+  const norm = (t: string) => t.trim().toLowerCase()
+  const turmas = new Map<string, { nome: string; anos: Set<string> }>()
+  for (const e of props.educandos) {
+    if (anoEsc && e.ano_escolar !== anoEsc) continue
+    const k = norm(e.turma)
+    const t = turmas.get(k) ?? { nome: e.turma.trim(), anos: new Set<string>() }
+    t.anos.add(e.ano_escolar)
+    turmas.set(k, t)
+  }
+  const listaTurmas = [...turmas].sort((a, b) => a[1].nome.localeCompare(b[1].nome))
+  const daTurma = disponiveis.filter((e) => (!anoEsc || e.ano_escolar === anoEsc) && (!turma || norm(e.turma) === turma))
 
   const alternar = (id: string) => {
     const s = new Set(sel)
@@ -293,7 +303,7 @@ function FormInscrever(props: {
           {(['educandos', 'turma', 'externo'] as const).map((m) => (
             <label key={m} className={modo === m ? 'ativo' : ''}>
               <input type="radio" checked={modo === m} onChange={() => setModo(m)} />
-              {m === 'educandos' ? 'Educandos' : m === 'turma' ? 'Turma inteira' : 'Não sócio'}
+              {m === 'educandos' ? 'Educandos' : m === 'turma' ? 'Turma / ano' : 'Não sócio'}
             </label>
           ))}
         </div>
@@ -318,10 +328,36 @@ function FormInscrever(props: {
         {modo === 'turma' && (
           <>
             <div className="linha-form">
-              <label>Ano<select value={anoEsc} onChange={(e) => { setAnoEsc(e.target.value); setTurma('') }}>{ANOS_ESCOLARES.filter((a) => a !== 'Saiu').map((a) => <option key={a}>{a}</option>)}</select></label>
-              <label>Turma<select value={turma} onChange={(e) => setTurma(e.target.value)}><option value="">Todas</option>{turmas.map((t) => <option key={t} value={t}>{t || '(sem turma)'}</option>)}</select></label>
+              <label>
+                Ano
+                <select value={anoEsc} onChange={(e) => { setAnoEsc(e.target.value); setTurma('') }}>
+                  <option value="">Todos os anos</option>
+                  {ANOS_ESCOLARES.filter((a) => a !== 'Saiu').map((a) => <option key={a}>{a}</option>)}
+                </select>
+              </label>
+              <label>
+                Turma
+                <select value={turma} onChange={(e) => setTurma(e.target.value)}>
+                  <option value="">Todas as turmas</option>
+                  {listaTurmas.map(([k, t]) => (
+                    <option key={k} value={k}>
+                      {t.nome || '(sem turma)'}{!anoEsc ? ` — ${[...t.anos].sort((a, b) => ANOS_ESCOLARES.indexOf(a as never) - ANOS_ESCOLARES.indexOf(b as never)).join(', ')}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
-            <p>Serão inscritos <b>{daTurma.length}</b> educando(s) de sócios ainda não inscritos.</p>
+            <p className="ajuda">Para uma turma mista, escolha "Todos os anos" e o nome da turma.</p>
+            <p>Serão inscritos <b>{plural(daTurma.length, 'educando')}</b> ainda não inscritos{daTurma.length > 0 && ':'}</p>
+            {daTurma.length > 0 && (
+              <div className="lista-escolha" style={{ maxHeight: 200 }}>
+                {daTurma.map((e) => (
+                  <div key={e.id} className="check" style={{ padding: '0.4rem 0.75rem', borderBottom: '1px solid var(--linha)' }}>
+                    {e.nome} <AnoEscolar ano={e.ano_escolar} turma={e.turma} />
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 

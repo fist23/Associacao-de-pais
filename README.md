@@ -43,6 +43,10 @@ proposto (Pré 3 → Pré 4 → Pré 5 → 1.º → … → 4.º → "Saiu"). An
 mudar o ano ou a turma de qualquer educando. Quem passa do pré-escolar para o 1.º ano fica com a turma em branco.
 Durante o ano, o ano e a turma de um educando também se mudam na ficha do sócio.
 
+**Turmas mistas** (ex.: 1.º e 2.º anos juntos, ou salas do pré com várias idades): cada educando mantém o seu ano
+e todos ficam com o mesmo nome de turma (ex.: "Mista", "Sala Azul"). Ao inscrever num evento, em **Turma / ano**
+escolha "Todos os anos" e o nome da turma. A app sugere os nomes de turma já usados, para evitar variantes.
+
 ## Identidade visual
 
 As cores e o motivo das folhas vêm do logótipo da associação: verde do texto (`#0a5c2c`), fundo menta,

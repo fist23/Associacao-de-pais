@@ -77,6 +77,7 @@ export default function Socios() {
     )
   }
 
+  const turmasExistentes = [...new Set(educandos.map((e) => e.turma.trim()).filter(Boolean))].sort()
   const proximoNumero = Math.max(0, ...socios.map((s) => s.numero || 0)) + 1
 
   const totalAtivos = socios.filter((x) => x.ativo).length
@@ -163,6 +164,7 @@ export default function Socios() {
           socio={aEditar === 'novo' ? null : aEditar}
           educandos={aEditar === 'novo' ? [] : eduPorSocio.get(aEditar.id) ?? []}
           proximoNumero={proximoNumero}
+          turmas={turmasExistentes}
           podeEditar={podeEditar}
           onFechar={() => setAEditar(null)}
           onGuardado={async () => {
@@ -194,6 +196,7 @@ type EduForm = { id?: string; nome: string; ano_escolar: string; turma: string }
 function FormSocio(props: {
   socio: Socio | null
   educandos: Educando[]
+  turmas: string[]
   proximoNumero: number
   podeEditar: boolean
   onFechar: () => void
@@ -282,10 +285,11 @@ function FormSocio(props: {
                   {ANOS_ESCOLARES.map((a) => <option key={a}>{a}</option>)}
                 </select>
               </label>
-              <label className="estreito">Turma<input value={e.turma} onChange={(x) => mudaEdu(i, 'turma', x.target.value)} placeholder="A" /></label>
+              <label className="medio">Turma<input value={e.turma} onChange={(x) => mudaEdu(i, 'turma', x.target.value)} placeholder="A, Mista…" list="turmas-existentes" /></label>
               {!ro && <button type="button" onClick={() => setEds(eds.filter((_, j) => j !== i))} aria-label="Remover educando" className="icone">✕</button>}
             </div>
           ))}
+          <datalist id="turmas-existentes">{props.turmas.map((t) => <option key={t} value={t} />)}</datalist>
           {!ro && (
             <button type="button" className="secundario pequeno" onClick={() => setEds([...eds, { nome: '', ano_escolar: '1.º', turma: '' }])}>
               + Adicionar educando

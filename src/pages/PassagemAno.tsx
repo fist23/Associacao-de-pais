@@ -86,7 +86,7 @@ export default function PassagemAno() {
       <PaginaTopo
         sobre={`De ${config.ano_letivo} para…`}
         titulo="Passagem de ano letivo"
-        descricao="Reveja o ano proposto para cada educando. Marque quem fica retido, ou mude o ano e a turma, antes de confirmar."
+        descricao="Reveja o ano proposto para cada educando. Marque quem fica retido, ou mude o ano e a turma (incluindo turmas mistas), antes de confirmar."
       />
 
       <div className="passagem-resumo painel">
@@ -137,7 +137,7 @@ export default function PassagemAno() {
                         </select>
                       </td>
                       <td>
-                        <input value={p.turma} onChange={(x) => muda(e.id, { turma: x.target.value })} placeholder="Turma" aria-label={`Turma de ${e.nome}`} style={{ maxWidth: 140 }} />
+                        <input value={p.turma} onChange={(x) => muda(e.id, { turma: x.target.value })} placeholder="Turma" list="turmas-existentes" aria-label={`Turma de ${e.nome}`} style={{ maxWidth: 160 }} />
                       </td>
                     </tr>
                   )
@@ -147,6 +147,7 @@ export default function PassagemAno() {
           </div>
         </section>
       ))}
+      <datalist id="turmas-existentes">{[...new Set(educandos.map((e) => e.turma.trim()).filter(Boolean))].sort().map((t) => <option key={t} value={t} />)}</datalist>
       {educandos.length === 0 && <p className="ajuda">Não há educandos registados.</p>}
     </>
   )
