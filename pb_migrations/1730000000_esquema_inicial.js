@@ -144,7 +144,7 @@ migrate(
         { name: 'valor', type: 'number', required: true, min: 0.01 },
         { name: 'metodo', type: 'select', required: true, maxSelect: 1, values: METODOS },
         { name: 'documento', type: 'text' }, // nº fatura / recibo
-        { name: 'comprovativo', type: 'file', maxSelect: 1, maxSize: 5242880, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] },
+        { name: 'comprovativo', type: 'file', maxSelect: 1, maxSize: 1048576, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] },
         { name: 'ano_letivo', type: 'text', required: true },
         { name: 'evento', type: 'relation', collectionId: eventos.id, cascadeDelete: false, maxSelect: 1 },
         { name: 'socio', type: 'relation', collectionId: socios.id, cascadeDelete: false, maxSelect: 1 },

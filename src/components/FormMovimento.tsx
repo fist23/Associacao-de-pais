@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { pb } from '../lib/pb'
 import { useSessao } from '../lib/contexto'
 import { CATEGORIAS_DESPESA, CATEGORIAS_RECEITA, METODOS, type Evento, type Movimento } from '../lib/types'
-import { dia, hoje, num, paraPB, tentar } from '../lib/util'
+import { dia, hoje, num, paraPB, prepararComprovativo, tentar } from '../lib/util'
 import Modal from './Modal'
 
 export default function FormMovimento(props: {
@@ -39,7 +39,14 @@ export default function FormMovimento(props: {
     if (num(f.valor) <= 0) return alert('O valor tem de ser maior que zero.')
     setAGuardar(true)
     const dados: Record<string, unknown> = { ...f, valor: num(f.valor), data: paraPB(f.data) }
-    if (ficheiro) dados.comprovativo = ficheiro
+    if (ficheiro) {
+      try {
+        dados.comprovativo = await prepararComprovativo(ficheiro)
+      } catch (err) {
+        setAGuardar(false)
+        return alert((err as Error).message)
+      }
+    }
     const ok = await tentar(() =>
       m
         ? pb.collection('movimentos').update(m.id, dados)
@@ -95,7 +102,7 @@ export default function FormMovimento(props: {
             <label>N.º fatura / recibo<input value={f.documento} onChange={muda('documento')} /></label>
           </div>
           <label>
-            Comprovativo (foto ou PDF, até 5 MB)
+            Comprovativo (fotografia ou PDF até 1 MB)
             <input type="file" accept="image/*,application/pdf" onChange={(e) => setFicheiro(e.target.files?.[0] ?? null)} />
           </label>
           {m?.comprovativo && (

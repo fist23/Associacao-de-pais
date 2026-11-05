@@ -14,13 +14,14 @@ Funciona no computador e no telemóvel (pode ser "instalada" no ecrã inicial co
 
 | Peça | Solução gratuita |
 |---|---|
-| Base de dados + login + API | [PocketBase](https://pocketbase.io) (um único programa, SQLite) |
-| Servidor | Oracle Cloud *Always Free*, ou um computador antigo / Raspberry Pi |
-| Endereço | Subdomínio grátis [DuckDNS](https://www.duckdns.org) (ex.: `ap-escola.duckdns.org`) |
-| HTTPS | Certificado Let's Encrypt automático (incluído no PocketBase) |
-| Cópias de segurança | Diárias no servidor + opcionalmente no Google Drive da associação (rclone) |
+| Alojamento (base de dados + login + app) | [PocketBase Cloud](https://pocketbasecloud.com), plano Free (50 MB) |
+| Endereço com HTTPS | `https://<nome>.pocketbasecloud.com` (incluído) |
+| Manter acordada / alertas | [UptimeRobot](https://uptimerobot.com), plano Free |
+| Ficheiro da app | Gerado automaticamente pelo GitHub em [Releases](https://github.com/fist23/Associacao-de-pais/releases/tag/app-mais-recente) |
 
-👉 **Guia de instalação — tudo pelo browser, sem terminal: [docs/INSTALACAO.md](docs/INSTALACAO.md)**
+👉 **Guia de instalação, tudo pelo browser: [docs/POCKETBASE_CLOUD.md](docs/POCKETBASE_CLOUD.md)**
+
+Alternativas com servidor próprio (Oracle Cloud *Always Free*, computador antigo ou Raspberry Pi): [docs/INSTALACAO.md](docs/INSTALACAO.md).
 
 ## Perfis de acesso
 

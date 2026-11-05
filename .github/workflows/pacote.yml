@@ -1,0 +1,36 @@
+# Sempre que o código muda, gera o ZIP da app e publica-o em
+# Releases → "Versão mais recente da app" (para carregar na PocketBase Cloud).
+name: Gerar ZIP da app
+
+on:
+  push:
+    paths-ignore: ['docs/**', '**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pacote
+  cancel-in-progress: true
+
+jobs:
+  pacote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: bash scripts/empacotar.sh
+      - name: Publicar em Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete app-mais-recente --yes --cleanup-tag || true
+          gh release create app-mais-recente app-associacao.zip \
+            --target "${{ github.sha }}" \
+            --title "Versão mais recente da app" \
+            --notes "Gerado automaticamente a partir de ${GITHUB_SHA::7} (ramo ${GITHUB_REF_NAME}). Descarregue **app-associacao.zip** e arraste-o para **Deploy** na PocketBase Cloud."
