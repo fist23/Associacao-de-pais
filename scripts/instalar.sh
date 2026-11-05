@@ -9,17 +9,27 @@
 #
 # Variáveis opcionais:
 #   REPO=https://github.com/<utilizador>/<repositorio>.git   (repositório da app)
-#   RAMO=main                                                 (ramo a instalar)
+#   RAMO=<ramo>                                               (por omissão: o ramo principal)
+#   ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NOME   cria logo o 1.º administrador da direção
+#                                             (e a conta técnica /_/ com o mesmo email e palavra-passe)
+#   NOME_ASSOCIACAO                           nome que aparece na app
+#   DUCKDNS_TOKEN                             atualiza automaticamente o IP no DuckDNS
 # =====================================================================
 set -euo pipefail
 
 DOMINIO="${1:-}"
 REPO="${REPO:-https://github.com/fist23/Associacao-de-pais.git}"
-RAMO="${RAMO:-main}"
+RAMO="${RAMO:-}"   # vazio = ramo principal do repositório
 PB_VERSAO="0.40.6"
 NODE_VERSAO="22.21.1"
 DIR=/opt/associacao
 UTIL=associacao
+ADMIN_EMAIL="${ADMIN_EMAIL:-}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
+ADMIN_NOME="${ADMIN_NOME:-Administrador}"
+NOME_ASSOCIACAO="${NOME_ASSOCIACAO:-}"
+DUCKDNS_TOKEN="${DUCKDNS_TOKEN:-}"
+export HOME="${HOME:-/root}"
 
 [ "$(id -u)" -eq 0 ] || { echo "Execute com sudo."; exit 1; }
 
@@ -29,6 +39,15 @@ case "$(uname -m)" in
   armv7l) ARQ=armv7; NODE_ARQ=armv7l ;;
   *) echo "Arquitetura não suportada: $(uname -m)"; exit 1 ;;
 esac
+
+if [ -n "$DUCKDNS_TOKEN" ] && [[ "$DOMINIO" == *.duckdns.org ]]; then
+  echo "==> DuckDNS: apontar $DOMINIO para este servidor"
+  SUB="${DOMINIO%.duckdns.org}"
+  echo "*/10 * * * * root curl -fsS 'https://www.duckdns.org/update?domains=$SUB&token=$DUCKDNS_TOKEN&ip=' -o /dev/null" > /etc/cron.d/associacao-duckdns
+  chmod 600 /etc/cron.d/associacao-duckdns
+  curl -fsS "https://www.duckdns.org/update?domains=$SUB&token=$DUCKDNS_TOKEN&ip=" || echo "  (aviso: não foi possível atualizar o DuckDNS agora)"
+  echo
+fi
 
 echo "==> Pacotes do sistema"
 apt-get update -qq
@@ -51,12 +70,11 @@ if [ ! -x /opt/node/bin/node ]; then
 fi
 rm -rf "$TMP"
 
-echo "==> Código da app ($REPO, ramo $RAMO)"
-if [ -d "$DIR/src/.git" ]; then
-  git -C "$DIR/src" fetch -q origin "$RAMO" && git -C "$DIR/src" checkout -q -B "$RAMO" "origin/$RAMO"
-else
-  git clone -q --branch "$RAMO" "$REPO" "$DIR/src"
+echo "==> Código da app ($REPO${RAMO:+, ramo $RAMO})"
+if [ ! -d "$DIR/src/.git" ]; then
+  git clone -q ${RAMO:+--branch "$RAMO"} "$REPO" "$DIR/src"
 fi
+git config --global --add safe.directory "$DIR/src"
 
 bash "$DIR/src/scripts/atualizar.sh" --sem-reiniciar
 
@@ -92,6 +110,16 @@ WantedBy=multi-user.target
 EOF
 
 chown -R "$UTIL:$UTIL" "$DIR"
+
+echo "==> Base de dados"
+sudo -u "$UTIL" env AP_ADMIN_EMAIL="$ADMIN_EMAIL" AP_ADMIN_PASSWORD="$ADMIN_PASSWORD" AP_ADMIN_NOME="$ADMIN_NOME" \
+  AP_NOME_ASSOCIACAO="$NOME_ASSOCIACAO" \
+  "$DIR/bin/pocketbase" migrate up --dir="$DIR/pb_data" --migrationsDir="$DIR/pb_migrations" >/dev/null
+if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD" ]; then
+  sudo -u "$UTIL" "$DIR/bin/pocketbase" superuser upsert "$ADMIN_EMAIL" "$ADMIN_PASSWORD" --dir="$DIR/pb_data" >/dev/null
+  echo "  Administrador e conta técnica criados para $ADMIN_EMAIL"
+fi
+
 systemctl daemon-reload
 systemctl enable --now associacao.service
 
@@ -121,6 +149,13 @@ echo
 echo "=================================================================="
 echo " Instalação concluída."
 echo
+if [ -n "$ADMIN_EMAIL" ]; then
+  echo " Entre na app com $ADMIN_EMAIL e a palavra-passe que escolheu:"
+  [ -n "$DOMINIO" ] && echo "    https://$DOMINIO"
+  echo "=================================================================="
+  touch "$DIR/INSTALADO"
+  exit 0
+fi
 echo " 1) Crie a conta de superutilizador (gestão técnica):"
 echo "    sudo -u $UTIL $DIR/bin/pocketbase superuser upsert O_SEU_EMAIL UMA_PASSWORD_FORTE --dir=$DIR/pb_data"
 echo

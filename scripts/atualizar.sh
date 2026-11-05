@@ -5,6 +5,7 @@ set -euo pipefail
 
 DIR=/opt/associacao
 UTIL=associacao
+git config --global --add safe.directory "$DIR/src" 2>/dev/null || true
 RAMO="${RAMO:-$(git -C "$DIR/src" rev-parse --abbrev-ref HEAD)}"
 export PATH="/opt/node/bin:$PATH"
 
