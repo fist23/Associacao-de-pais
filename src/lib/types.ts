@@ -74,6 +74,12 @@ export interface Evento extends Base {
   descricao: string
   ano_letivo: string
   estado: string
+  /** Data limite de inscrição (opcional) */
+  inscricoes_ate: string
+  /** Se preenchida, os preços normais valem até esta data (inclusive) e depois aplicam-se os preços "depois" */
+  preco_ate: string
+  preco_depois: number
+  preco_nao_socio_depois: number
 }
 
 export interface Inscricao extends Base {

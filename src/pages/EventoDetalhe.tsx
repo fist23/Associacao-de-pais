@@ -5,6 +5,7 @@ import { useSessao } from '../lib/contexto'
 import { ANOS_ESCOLARES, METODOS, type Educando, type Evento, type Inscricao, type Movimento, type Socio } from '../lib/types'
 import { dataPT, euro, exportarCSV, hoje, num, plural, tentar } from '../lib/util'
 import { anularPagamentoInscricao, pagarInscricao, somar } from '../lib/dados'
+import { inscricoesFechadas, precoDepoisAtivo, precoEvento, textoPrazo, textoPrecos } from '../lib/eventos'
 import Modal from '../components/Modal'
 import FormMovimento from '../components/FormMovimento'
 import { FormEvento } from './Eventos'
@@ -106,6 +107,10 @@ export default function EventoDetalhe() {
             <span className="tipo"><span className="folha" aria-hidden />{ev.tipo}</span>
             <h1>{ev.nome}</h1>
             <p>{ev.local || 'Local por definir'} · <span className="estado">{ev.estado}</span></p>
+            <p className="secundaria" style={{ marginTop: '0.2rem' }}>
+              {textoPrazo(ev) && <span className={`prazo ${inscricoesFechadas(ev) ? 'fechado' : ''}`}>{textoPrazo(ev)} · </span>}
+              Preço: {textoPrecos(ev)}
+            </p>
           </div>
         </div>
         {podeEditar && (
@@ -229,8 +234,7 @@ export default function EventoDetalhe() {
 // ---------------------------------------------------------------------
 
 function precoPara(ev: Evento, e?: EducandoExp) {
-  const socioAtivo = e?.expand?.socio?.ativo
-  return socioAtivo || !ev.preco_nao_socio ? ev.preco : ev.preco_nao_socio
+  return precoEvento(ev, Boolean(e?.expand?.socio?.ativo))
 }
 
 function FormInscrever(props: {
@@ -248,7 +252,7 @@ function FormInscrever(props: {
   const [turma, setTurma] = useState('')
   const [nome, setNome] = useState('')
   const [contacto, setContacto] = useState('')
-  const [valorExt, setValorExt] = useState(String(props.evento.preco_nao_socio || props.evento.preco).replace('.', ','))
+  const [valorExt, setValorExt] = useState(String(precoEvento(props.evento, false)).replace('.', ','))
   const [aGuardar, setAGuardar] = useState(false)
 
   const disponiveis = props.educandos.filter((e) => !props.jaInscritos.has(e.id))
@@ -287,6 +291,7 @@ function FormInscrever(props: {
             valor: precoPara(props.evento, e),
           }))
     if (!lista.length || (modo === 'externo' && !nome.trim())) return alert('Nada para inscrever.')
+    if (inscricoesFechadas(props.evento) && !confirm(`As inscrições fecharam a ${dataPT(props.evento.inscricoes_ate)}. Inscrever mesmo assim?`)) return
     if (lista.length > props.vagasLivres && !confirm(`Só há ${props.vagasLivres} vaga(s) livre(s). Inscrever mesmo assim?`)) return
     setAGuardar(true)
     const ok = await tentar(async () => {
@@ -299,6 +304,12 @@ function FormInscrever(props: {
   return (
     <Modal titulo="Inscrever" onFechar={props.onFechar}>
       <form onSubmit={guardar}>
+        {inscricoesFechadas(props.evento) && (
+          <div className="aviso-caixa">As inscrições fecharam a {dataPT(props.evento.inscricoes_ate)}.</div>
+        )}
+        {precoDepoisAtivo(props.evento) && (
+          <p className="ajuda">O primeiro preço terminou a {dataPT(props.evento.preco_ate)}: aplica-se o preço atual.</p>
+        )}
         <div className="alternar">
           {(['educandos', 'turma', 'externo'] as const).map((m) => (
             <label key={m} className={modo === m ? 'ativo' : ''}>
