@@ -12,7 +12,7 @@ DUCKDNS_TOKEN="cole-aqui-o-token"         # o "token" que aparece no topo da pá
 
 ADMIN_NOME="Nome do Presidente"           # a sua conta na app
 ADMIN_EMAIL="email@exemplo.pt"
-ADMIN_PASSWORD="UmaPalavraPasseForte!"    # mínimo 10 caracteres; mude-a depois em Definições
+ADMIN_PASSWORD="UmaPalavraPasseForte!"    # mínimo 10 caracteres, sem os símbolos  "  $  `  \
 
 NOME_ASSOCIACAO="Associação de Pais EB JI da Serpente"
 

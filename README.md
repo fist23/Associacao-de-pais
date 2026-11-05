@@ -20,7 +20,7 @@ Funciona no computador e no telemóvel (pode ser "instalada" no ecrã inicial co
 | HTTPS | Certificado Let's Encrypt automático (incluído no PocketBase) |
 | Cópias de segurança | Diárias no servidor + opcionalmente no Google Drive da associação (rclone) |
 
-👉 **Guia de instalação passo a passo: [docs/INSTALACAO.md](docs/INSTALACAO.md)**
+👉 **Guia de instalação — tudo pelo browser, sem terminal: [docs/INSTALACAO.md](docs/INSTALACAO.md)**
 
 ## Perfis de acesso
 

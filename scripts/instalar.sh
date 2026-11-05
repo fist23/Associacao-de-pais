@@ -49,6 +49,13 @@ if [ -n "$DUCKDNS_TOKEN" ] && [[ "$DOMINIO" == *.duckdns.org ]]; then
   echo
 fi
 
+# Servidores pequenos (ex.: VM.Standard.E2.1.Micro com 1 GB): memória extra para compilar a app
+if [ "$(awk '/MemTotal/ {print $2}' /proc/meminfo)" -lt 1900000 ] && [ ! -f /swapfile ]; then
+  echo "==> Pouca memória: a criar 2 GB de swap"
+  fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile &&
+    echo '/swapfile none swap sw 0 0' >> /etc/fstab || echo "  (aviso: não foi possível criar swap)"
+fi
+
 echo "==> Pacotes do sistema"
 apt-get update -qq
 apt-get install -y -qq git unzip curl ca-certificates sqlite3 >/dev/null

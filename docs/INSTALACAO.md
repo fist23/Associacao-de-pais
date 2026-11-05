@@ -1,148 +1,189 @@
-# Instalação no servidor (gratuita)
+# Instalação — tudo pelo browser, sem custos
 
-Este guia põe a app a funcionar num servidor **Oracle Cloud Always Free**, com endereço
-`https://<nome>.duckdns.org`. Demora cerca de 1 hora na primeira vez.
-Não é preciso saber programar — basta copiar e colar comandos.
+Vai precisar de cerca de **30 minutos de cliques** e de mais **15 minutos de espera** enquanto o servidor se instala sozinho.
+Não é preciso abrir terminais nem escrever comandos.
 
-> Sem cartão para a Oracle? Veja a [alternativa com um computador antigo](#alternativa-computador-antigo--raspberry-pi--cloudflare-tunnel).
+No fim terá a app em `https://<nome>.duckdns.org`, num servidor gratuito da Oracle Cloud na Europa.
 
-**Recomendação:** crie primeiro um email da associação (ex.: um Gmail `ap.escola.xxx@gmail.com`)
-e use-o em todas as contas (Oracle, DuckDNS, Google Drive). Assim tudo passa para a próxima direção
-sem depender de um pai em particular.
+| Passo | Onde | Tempo |
+|---|---|---|
+| 0. Email da associação (recomendado) | gmail.com | 5 min |
+| 1. Endereço gratuito | duckdns.org | 3 min |
+| 2. Conta na Oracle Cloud | oracle.com | 10 min |
+| 3. Criar o servidor (com instalação automática) | Oracle Cloud | 10 min |
+| 4. Abrir as portas da web | Oracle Cloud | 3 min |
+| 5. Esperar e entrar na app | o seu browser | 15 min |
 
 ---
 
-## 1. Criar o servidor na Oracle Cloud
+## 0. Email da associação (recomendado)
 
-1. Criar conta em <https://www.oracle.com/cloud/free/>.
-   - **Home region:** escolha uma região europeia (ex.: *Spain Central (Madrid)* ou *Germany Central (Frankfurt)*). Não se pode mudar depois. Dados na UE = melhor para o RGPD.
-   - É pedido um cartão **apenas para verificação** — o plano *Always Free* não cobra nada. Não faça "upgrade" para *Pay As You Go* se quiser ter a certeza de que nunca paga.
-2. No menu: **Compute → Instances → Create instance**.
-   - **Image:** Canonical Ubuntu 24.04.
-   - **Shape:** *Ampere* `VM.Standard.A1.Flex` com 1 OCPU e 6 GB de RAM (sobra). Se disser que não há capacidade, tente mais tarde ou use `VM.Standard.E2.1.Micro` (também grátis).
-   - **SSH keys:** "Generate a key pair for me" → **descarregue a chave privada** e guarde-a bem (ex.: no Drive da associação).
-   - Clique **Create**. Anote o **Public IP address**.
-3. Abrir as portas da web: na página da instância → **Subnet** → **Security Lists** → *Default Security List* → **Add Ingress Rules**:
-   - Source CIDR `0.0.0.0/0`, IP Protocol TCP, Destination Port Range `80,443`.
+Crie um Gmail só para a associação, ex.: `ap.serpente@gmail.com`, e use-o nas contas seguintes.
+Assim, quando a direção mudar, basta passar a palavra-passe deste email — tudo fica da associação e não de um pai.
 
-> A Oracle pode recuperar instâncias grátis que fiquem semanas quase sem uso de CPU. Com a direção a usar a app regularmente não deve acontecer, e as cópias de segurança no Google Drive (passo 6) protegem contra isso.
+## 1. Endereço gratuito (DuckDNS)
 
-## 2. Endereço gratuito (DuckDNS)
+1. Abra <https://www.duckdns.org> e entre com **Google** (a conta da associação).
+2. Em **sub domain** escreva o nome, ex.: `ap-serpente`, e clique **add domain**.
+   O endereço fica `ap-serpente.duckdns.org`.
+3. No topo da página aparece **token** (uma sequência como `a1b2c3d4-...`). **Copie-o** — vai precisar dele no passo 3.
 
-1. Entrar em <https://www.duckdns.org> (com a conta Google da associação).
-2. Criar um subdomínio, ex.: `ap-escola` → fica `ap-escola.duckdns.org`.
-3. No campo *current ip*, colocar o **Public IP** do servidor e clicar **update ip**.
+> Não precisa de preencher o IP: o servidor faz isso sozinho.
 
-## 3. Instalar a app
+## 2. Conta na Oracle Cloud
 
-Ligar ao servidor (no Windows use o PowerShell; no Mac/Linux o Terminal):
+1. Abra <https://www.oracle.com/cloud/free/> → **Start for free**.
+2. Preencha com o email da associação.
+3. **Home Region:** escolha **Spain Central (Madrid)** ou **Germany Central (Frankfurt)**.
+   Não pode ser mudada depois; dados na União Europeia é o mais adequado para o RGPD.
+4. É pedido um cartão **apenas para verificar a identidade**. O plano *Always Free* não cobra nada.
+   Não faça "Upgrade to Pay As You Go".
+5. Aguarde o email de confirmação de que a conta está pronta (pode demorar alguns minutos).
+
+## 3. Criar o servidor (a instalação é automática)
+
+### 3a. Preparar o texto da instalação
+
+Abra o ficheiro [`scripts/oracle-cloud-init.sh`](../scripts/oracle-cloud-init.sh) no GitHub, clique no botão
+**Copy raw file** (ícone de copiar) e cole-o num bloco de notas. Altere **só** as linhas do topo:
 
 ```bash
-ssh -i caminho/para/chave-privada.key ubuntu@IP_DO_SERVIDOR
+DOMINIO="ap-serpente.duckdns.org"         # o endereço do passo 1
+DUCKDNS_TOKEN="a1b2c3d4-...."             # o token do passo 1
+
+ADMIN_NOME="Marco Mesquita"               # o seu nome
+ADMIN_EMAIL="o.seu.email@gmail.com"       # o email com que vai entrar na app
+ADMIN_PASSWORD="UmaPalavraPasseForte!"    # mínimo 10 caracteres
+
+NOME_ASSOCIACAO="Associação de Pais EB JI da Serpente"
 ```
 
-Já dentro do servidor:
+> Na palavra-passe não use os símbolos `"` `$` `` ` `` `\`. Depois de entrar, pode mudá-la em **Definições**.
+
+### 3b. Criar a instância
+
+1. Na Oracle Cloud, menu ☰ → **Compute** → **Instances** → **Create instance**.
+2. **Name:** `associacao-pais`.
+3. **Image and shape** → **Edit**:
+   - **Change image** → **Ubuntu** → *Canonical Ubuntu 24.04* → **Select image**.
+   - **Change shape** → **Ampere** → `VM.Standard.A1.Flex` com **1 OCPU** e **6 GB** de memória → **Select shape**.
+     Tem a etiqueta *Always Free-eligible*.
+     Se aparecer *"Out of capacity"*, escolha **Specialty and previous generation** → `VM.Standard.E2.1.Micro` (também grátis).
+4. **Networking:** deixe as opções por omissão (cria uma rede nova) e confirme que
+   **Automatically assign public IPv4 address** está ligado.
+5. **Add SSH keys:** escolha **Generate a key pair for me** e clique **Save private key**.
+   Guarde esse ficheiro no Google Drive da associação — só será preciso em caso de avaria.
+6. Clique **Show advanced options** (ou **Advanced options**) → separador **Management** →
+   **Initialization script** → **Paste cloud-init script** → cole **todo** o texto preparado em 3a.
+7. Clique **Create**. Na página da instância, anote o **Public IP address** (útil para confirmar no passo 5).
+
+## 4. Abrir as portas da web
+
+1. Na página da instância, na secção **Primary VNIC**, clique no nome da **Subnet**.
+2. Separador **Security** (ou **Security Lists**) → clique em **Default Security List for ...**.
+3. Separador **Security rules** → **Add Ingress Rules** e preencha:
+   - **Source CIDR:** `0.0.0.0/0`
+   - **IP Protocol:** TCP
+   - **Destination Port Range:** `80,443`
+4. **Add Ingress Rules**.
+
+## 5. Esperar e entrar
+
+1. Espere **10 a 15 minutos**: o servidor está a instalar tudo (app, base de dados, segurança, cópias de segurança diárias).
+2. Abra `https://ap-serpente.duckdns.org` (o seu endereço).
+   No primeiro acesso pode demorar uns segundos a mais — está a obter o certificado de segurança (o cadeado).
+3. Entre com o **email e palavra-passe** que colocou em 3a.
+4. Em **Definições**:
+   - confirme o **valor da quota** e indique o **saldo inicial** (dinheiro em caixa + banco hoje);
+   - em **Membros da direção**, crie as contas do(a) tesoureiro(a) e restantes membros;
+   - mude a sua palavra-passe (a que escreveu no script ficou guardada nas definições da instância da Oracle).
+5. No telemóvel: abra o endereço → menu do browser → **Adicionar ao ecrã principal**.
+
+✅ Pronto. A app faz uma cópia de segurança todos os dias às 03:30.
+
+---
+
+## Se a app não abrir ao fim de 20 minutos
+
+| Verificar | Onde |
+|---|---|
+| O DuckDNS mostra o mesmo IP que a instância (passo 3b, ponto 7) | duckdns.org → coluna *current ip* |
+| A regra das portas 80 e 443 existe | passo 4 |
+| A instância está *Running* | Oracle → Compute → Instances |
+
+Se tudo estiver certo, abra a **Cloud Shell** da Oracle (ícone `>_` no topo da consola, funciona no browser):
+carregue a chave privada guardada no passo 3b (menu ⚙ da Cloud Shell → **Upload**) e escreva:
 
 ```bash
-curl -fsSL -o instalar.sh https://raw.githubusercontent.com/fist23/Associacao-de-pais/main/scripts/instalar.sh
-sudo bash instalar.sh ap-escola.duckdns.org
+chmod 600 ssh-key-*.key
+ssh -i ssh-key-*.key ubuntu@IP_DA_INSTANCIA "sudo tail -n 40 /var/log/associacao-instalacao.log"
 ```
 
-> **Repositório privado?** O servidor não consegue descarregar o código sem autorização.
-> Crie um *fine-grained token* só de leitura em GitHub → Settings → Developer settings, e use:
-> `sudo REPO=https://<TOKEN>@github.com/fist23/Associacao-de-pais.git bash instalar.sh ap-escola.duckdns.org`
-> (e descarregue o `instalar.sh` copiando o conteúdo à mão).
+A mensagem final deve ser **"Instalação concluída"**. Se houver um erro, copie as últimas linhas e peça ajuda.
 
-O script instala tudo, cria o serviço que arranca sozinho, abre a firewall e agenda as cópias de segurança diárias.
+## Painel técnico (opcional)
 
-## 4. Primeiro acesso
+Em `https://<endereço>/_/` existe o painel técnico do PocketBase, com o mesmo email e palavra-passe iniciais.
+Permite ver todos os dados em bruto, configurar o envio de emails (*Settings → Mail settings*) e descarregar
+cópias de segurança (*Settings → Backups*). No dia a dia não é preciso.
 
-1. Criar a conta técnica (superutilizador) — use uma palavra-passe forte e guarde-a:
-   ```bash
-   sudo -u associacao /opt/associacao/bin/pocketbase superuser upsert email@associacao.pt PalavraPasseForte --dir=/opt/associacao/pb_data
-   ```
-2. Abrir `https://ap-escola.duckdns.org/_/` (painel técnico) e entrar com essa conta.
-3. Coleção **users** → **New record**: email, password, name, **papel = admin**, *verified* ligado. Este é o administrador da direção.
-4. Abrir `https://ap-escola.duckdns.org` e entrar com o administrador.
-5. Em **Definições**: nome da associação, valor da quota e **saldo inicial** (dinheiro em caixa + banco à data de hoje).
-6. Em **Definições → Membros da direção**, criar contas para o(a) tesoureiro(a) e restantes membros.
-7. No telemóvel: abrir o endereço → menu do browser → **Adicionar ao ecrã principal**.
+## Manutenção (usa a Cloud Shell, como acima)
 
-## 5. Configurar o email (opcional)
+Ligar ao servidor: `ssh -i ssh-key-*.key ubuntu@IP_DA_INSTANCIA` e depois:
 
-Sem email, as palavras-passe esquecidas são redefinidas pelo administrador em *Definições*. Funciona bem.
-Se quiser, no painel técnico (`/_/` → Settings → Mail settings) pode usar o SMTP gratuito do Gmail da associação
-(com uma *palavra-passe de app* do Google).
+| Para… | Comando |
+|---|---|
+| Atualizar a app para a versão mais recente | `sudo bash /opt/associacao/src/scripts/atualizar.sh` |
+| Atualizações de segurança (1× por mês) | `sudo apt-get update && sudo apt-get upgrade -y` |
+| Ver se está a funcionar | `sudo systemctl status associacao` |
+| Ver erros | `sudo journalctl -u associacao -n 100` |
+| Mudar a palavra-passe do painel técnico | `sudo -u associacao /opt/associacao/bin/pocketbase superuser upsert EMAIL NOVA --dir=/opt/associacao/pb_data` |
 
-## 6. Cópias de segurança
+### Cópias de segurança também no Google Drive (recomendado)
 
-Todos os dias às 03:30 é criada uma cópia em `/opt/associacao/backups/` (últimos 30 dias).
-**Recomendado:** enviar também para o Google Drive da associação, para não perder nada se o servidor desaparecer:
+As cópias diárias ficam no servidor (`/opt/associacao/backups`, últimos 30 dias). Para ficarem também no Drive da associação:
 
 ```bash
 sudo apt-get install -y rclone
 sudo -u associacao rclone config
-#  n (novo) → nome: drive → tipo: drive → (Enter nos restantes)
-#  "Use web browser to automatically authenticate?" → n
-#  siga as instruções (abre um link no seu computador e cola o código)
+#  n → nome: drive → tipo: drive → Enter nos restantes
+#  "Use web browser to automatically authenticate?" → n  → siga as instruções
+sudo -u associacao bash /opt/associacao/src/scripts/backup.sh   # deve dizer "enviada para o Google Drive"
 ```
-
-Testar: `sudo -u associacao bash /opt/associacao/src/scripts/backup.sh` — deve aparecer "enviada para o Google Drive".
 
 ### Repor uma cópia
 
 ```bash
 sudo systemctl stop associacao
-cd /tmp && mkdir repor && tar -xzf /opt/associacao/backups/associacao_AAAA-MM-DD_HHMM.tar.gz -C repor
-sudo cp repor/data.db /opt/associacao/pb_data/data.db
-sudo rm -rf /opt/associacao/pb_data/storage && sudo cp -r repor/storage /opt/associacao/pb_data/ 2>/dev/null || true
+mkdir /tmp/repor && tar -xzf /opt/associacao/backups/associacao_AAAA-MM-DD_HHMM.tar.gz -C /tmp/repor
+sudo cp /tmp/repor/data.db /opt/associacao/pb_data/data.db
+sudo rm -rf /opt/associacao/pb_data/storage && sudo cp -r /tmp/repor/storage /opt/associacao/pb_data/ 2>/dev/null || true
 sudo rm -f /opt/associacao/pb_data/data.db-wal /opt/associacao/pb_data/data.db-shm
 sudo chown -R associacao:associacao /opt/associacao/pb_data
 sudo systemctl start associacao
 ```
 
-## 7. Atualizar a app
-
-Quando houver uma versão nova no GitHub:
-
-```bash
-sudo bash /opt/associacao/src/scripts/atualizar.sh
-```
-
-(faz uma cópia de segurança antes, compila e reinicia). Atualizações de segurança do Ubuntu:
-`sudo apt-get update && sudo apt-get upgrade -y` uma vez por mês.
-
-## Comandos úteis
-
-| Para… | Comando |
-|---|---|
-| Ver se está a funcionar | `sudo systemctl status associacao` |
-| Ver erros | `sudo journalctl -u associacao -n 100` |
-| Reiniciar | `sudo systemctl restart associacao` |
-| Redefinir a palavra-passe técnica | `sudo -u associacao /opt/associacao/bin/pocketbase superuser upsert EMAIL NOVA --dir=/opt/associacao/pb_data` |
-
 ---
 
-## Alternativa: computador antigo / Raspberry Pi + Cloudflare Tunnel
+## Alternativa sem Oracle: computador antigo / Raspberry Pi + Cloudflare Tunnel
 
-Sem cartão de crédito e sem abrir portas no router. Precisa de um equipamento ligado 24h com Ubuntu/Debian/Raspberry Pi OS
-(um Raspberry Pi 3 ou superior chega) e de um domínio gerido pela Cloudflare
-(a Cloudflare não aceita subdomínios DuckDNS; um domínio `.pt`/`.com` custa ~10 €/ano — ou use o endereço
-temporário `trycloudflare.com` apenas para testes).
+Sem cartão de crédito e sem abrir portas no router. Precisa de um equipamento ligado 24h com Ubuntu, Debian ou
+Raspberry Pi OS (um Raspberry Pi 3 ou superior chega) e de um domínio na Cloudflare (~10 €/ano; a Cloudflare não aceita DuckDNS).
 
-1. Instalar a app sem domínio (fica só acessível localmente na porta 8090):
+1. No equipamento, num terminal:
    ```bash
-   sudo bash instalar.sh
+   curl -fsSL -o instalar.sh https://raw.githubusercontent.com/fist23/Associacao-de-pais/HEAD/scripts/instalar.sh
+   sudo ADMIN_NOME="O seu nome" ADMIN_EMAIL="email@exemplo.pt" ADMIN_PASSWORD="PalavraPasseForte" bash instalar.sh
    ```
-2. Instalar o `cloudflared` e criar o túnel seguindo
+2. Crie o túnel no painel da Cloudflare (Zero Trust → Networks → Tunnels), seguindo
    <https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-remote-tunnel/>,
-   apontando o *Public hostname* para `http://localhost:8090`.
-3. Continuar no [passo 4](#4-primeiro-acesso) usando o endereço do túnel.
+   com o *Public hostname* a apontar para `http://localhost:8090`.
+3. Continue no [passo 5](#5-esperar-e-entrar) usando o endereço do túnel.
 
 ## Notas de RGPD
 
 - Recolha apenas os dados necessários; a app não pede datas de nascimento nem dados de saúde.
-- Registe o consentimento de cada família (campo "Autorizou o tratamento dos dados pessoais"); os sócios sem consentimento aparecem com a etiqueta **RGPD**.
+- Registe o consentimento de cada família (campo "Autorizou o tratamento dos dados pessoais"); os sócios sem consentimento aparecem com a marca **sem RGPD**.
 - Dê a cada membro da direção o papel mínimo necessário e retire o acesso quando sair da direção.
-- Famílias que saem da escola: marque como inativas e, passado o prazo definido pela associação (ex.: 1 ano após o fim das quotas), apague-as.
-- Os comprovativos (faturas) ficam guardados no servidor; não carregue documentos com dados de saúde ou outros dados sensíveis.
+- Famílias que saem da escola: marque como inativas e, passado o prazo definido pela associação (ex.: 1 ano), apague-as.
+- Não carregue comprovativos com dados de saúde ou outros dados sensíveis.
